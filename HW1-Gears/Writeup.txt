@@ -1,0 +1,17 @@
+Homework 1
+9/5/2019
+Connor Guerin
+
+1. 
+	FPS @
+	1x1: 797.8 FPS
+	300x300: 493.2 FPS
+	2256x1504 (Full Screen): 40.535 FPS
+
+	These results are in line with what would be expected, because it takes more recourses to render a higher resolution image. If the window is smaller, the resolution is lower and therefore the GPU can render frames faster. As the window size increases to full screen, the number of pixels in each frame increases, and the GPU takes longer to render each one.
+
+2. 
+	The reason frame rate can vary between systems is due to the variance in capability of different hardware. Systems with powerful dedicated GPUs will be able to render more complex 3D scenes faster than the integrated GPUs that are part of many modern CPUs. The other factor limiting FPS can be the way that the hardware manages its power consumption. FPS can be a low, round number in some cases because the hardware limits the FPS to the refresh rate of the screen, since there is little visual difference between, for example, 200 FPS and 60 FPS on a 60Hz screen. FPS can also arbitrarily be limited by the OS to conserve power. For example, on my laptop the gears program runs at about 400 FPS on a lower power setting, and over 800 FPS on the highest power setting.
+
+3. 
+	This assignment took me about 40 minutes, including the time required to get the OpenGL environment up and running.
