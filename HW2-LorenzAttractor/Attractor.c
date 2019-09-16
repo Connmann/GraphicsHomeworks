@@ -1,6 +1,5 @@
 /*
- *  Homework 2 - Lorenz Attractor
- *  Connor Guerin
+ *  Hello World Triangle Version 5
  */
 #include <stdio.h>
 #include <stdarg.h>
@@ -20,7 +19,8 @@ double s  = 10;
 double b  = 2.6666;
 double r  = 28;
 
-char selected = 's';
+char selected = 's'
+
 
 /*
  * Convenience function for text
@@ -94,7 +94,7 @@ void display()
    glVertex3f(0.0, 0.0, 60.0);
    glEnd();
 
-   glColor3f(0.6,0.0,1.0);
+   glColor3f(1.0,0.0,0.0);
 
    //Draw Lorenz Attractor
 
@@ -118,27 +118,16 @@ void display()
       x += dt*dx;
       y += dt*dy;
       z += dt*dz;
-
-      double blueInc = 0.6 + ((0.4/50000)*i);
-      double greenInc = (1.0/50000)*i;
-
-      glColor3d(blueInc, greenInc, 1.0);
-
       glVertex3f(x, y, z);
    }
    glEnd();
 
-   if (selected == 's') glColor3f(0.6, 0.0, 1.0); else glColor3f(1.0, 1.0, 1.0);
+   //  Display rotation angle
+   glColor3f(1,1,1);
    glWindowPos2i(5,5);
-   Print("s=%.1f",s);
-
-   if (selected == 'b') glColor3f(0.6, 0.0, 1.0); else glColor3f(1.0, 1.0, 1.0);
-   glWindowPos2i(100,5);
-   Print("b=%.1f",b);
-
-   if (selected == 'r') glColor3f(0.6, 0.0, 1.0); else glColor3f(1.0, 1.0, 1.0);
-   glWindowPos2i(200,5);
-   Print("r=%.1f",r);
+   Print("s=%.1f ",s);
+   Print("b=%.3f ",b);
+   Print("r=%.1f ",r);
 
    //  Sanity check
    ErrCheck("display");
@@ -165,6 +154,7 @@ void special(int key,int x,int y)
    else if (key == GLUT_KEY_DOWN)
       xh -= 5;
 
+
    //  Request display update
    glutPostRedisplay();
 }
@@ -186,21 +176,21 @@ void key(unsigned char ch,int x,int y)
       selected = 'b';
    else if (ch == 'r')
       selected = 'r';
-   else if (ch == '[') {
+   else if (ch = '[') {
       if (selected == 's')
-         s+=0.1;
+         s+=0.01
       else if (selected == 'b')
-         b+=0.1;
+         b+=0.01
       else if (selected == 'r')
-         r+=0.1;
+         r+=0.01
    }
-   else if (ch == ']') {
+   else if (ch = ']') {
       if (selected == 's')
-         s-=0.1;
+         s-=0.01
       else if (selected == 'b')
-         b-=0.1;
+         b-=0.01
       else if (selected == 'r')
-         r-=0.1;
+         r-=0.01
    }
 
    //  Tell GLUT it is necessary to redisplay the scene
@@ -238,7 +228,7 @@ void reshape(int width,int height)
 void idle()
 {
    //  Get elapsed (wall) time in seconds
-   // double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+   double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
    
    //  Request display update
    glutPostRedisplay();
