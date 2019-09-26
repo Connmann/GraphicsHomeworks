@@ -1,7 +1,7 @@
 /*
- *  3D Objects
+ *  Homework 3 - 3D Scene
  *
- *  Demonstrates how to draw objects in 3D.
+ *  Connor Guerin
  *
  *  Key bindings:
  *  m/M        Cycle through different sets of objects
@@ -24,7 +24,6 @@
 
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
-double zh=0;      //  Rotation of teapot
 int axes=1;       //  Display axes
 int mode=0;       //  What to display
 
@@ -51,14 +50,6 @@ void Print(const char* format , ...)
       glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,*ch++);
 }
 
-/*
- *  Draw vertex in polar coordinates
- */
-static void Vertex(double th,double ph)
-{
-   glColor3f(Cos(th)*Cos(th) , Sin(ph)*Sin(ph) , Sin(th)*Sin(th));
-   glVertex3d(Sin(th)*Cos(ph) , Sin(ph) , Cos(th)*Cos(ph));
-}
 
 /*
  *  Draw a cube
@@ -127,7 +118,7 @@ static void wheel(double x,double y,double z,
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
 
-   glColor3f(0.5,0.5,0.5);
+   glColor3f(0.3,0.3,0.3);
    //Wheel
    glBegin(GL_TRIANGLE_FAN);
    glVertex3f(0, 0, -0.05);
@@ -147,7 +138,7 @@ static void wheel(double x,double y,double z,
    }
    glEnd();
 
-   glColor3f(0.5,0.5,0.5);
+   glColor3f(0.3,0.3,0.3);
    glBegin(GL_QUAD_STRIP);
    for (th=0;th<=360;th+=s)
    {
@@ -306,10 +297,10 @@ static void car(double x,double y,double z,
    //Cabin
    cube(-0.1,0.3,0, 0.3,0.1,0.35, 0);
 
-   wheel(0.6,0,0.4, dx,dy,dz, 0, 8, 10);
-   wheel(-0.6,0,-0.4, dx,dy,dz, 0, 8, 10);
-   wheel(0.6,0,-0.4, dx,dy,dz, 0, 8, 10);
-   wheel(-0.6,0,0.4, dx,dy,dz, 0, 8, 10);
+   wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
+   wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
+   wheel(0.6,0,-0.4, 1,1,1, 0, 8, 10);
+   wheel(-0.6,0,0.4, 1,1,1, 0, 8, 10);
 
    glColor3f(cr, cb, cg);
 
@@ -435,20 +426,48 @@ void display()
    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
+
    //  Undo previous transformations
    glLoadIdentity();
    //  Set view angle
    glRotatef(ph,1,0,0);
    glRotatef(th,0,1,0);
 
-   //Red car
-   car(-1,0,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
-   //Blue car
-   car(-1,0,0.8, 1,1,1, 0, 0,0,0.8);
-   //Green car
-   car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
-   //Teal car
-   car(1.5,0,-1, 1,1,1, 220, 0,0.8,0.8);
+
+   switch(mode) {
+      case 0:
+         //Red car
+         car(-1,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
+         break;   
+      case 1:
+         //Blue car
+         car(-1,0,0.8, 1,1,1, 0, 0,0,0.8);
+         break;
+      case 2:
+         //Green car
+         car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
+         break;
+      case 3:
+         //Teal car
+         car(1.2,0,-0.8, 1,1,1, 220, 0,0.8,0.8);
+         break;
+      case 4:
+         //All cars and surface
+
+         //Red car
+         car(-1,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
+         //Blue car
+         car(-1,0,0.8, 1,1,1, 0, 0,0,0.8);
+         //Green car
+         car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
+         //Teal car
+         car(1.2,0,-0.8, 1,1,1, 220, 0,0.8,0.8);
+
+         //Parking surface
+         glColor3f(0.4, 0.4, 0.4);
+         cube(0, -0.23, 0, 2,0.1,2, 0);
+         break;
+   }
 
    //  White
    glColor3f(1,1,1);
@@ -472,9 +491,12 @@ void display()
       Print("Z");
    }
    //  Five pixels from the lower left corner of the window
-   glWindowPos2i(5,25);
+   glWindowPos2i(10,10);
    //  Print the text string
    Print("Angle=%d,%d",th,ph);
+   //Print the current mode
+   glWindowPos2i(150,10);
+   Print("Mode=%d",mode);
    //  Render the scene
    glFlush();
    //  Make the rendered scene visible
@@ -521,9 +543,9 @@ void key(unsigned char ch,int x,int y)
       axes = 1-axes;
    //  Switch display mode
    else if (ch == 'm')
-      mode = (mode+1)%7;
+      mode = (mode+1)%5;
    else if (ch == 'M')
-      mode = (mode+6)%7;
+      mode = (mode+4)%5;
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -555,8 +577,6 @@ void reshape(int width,int height)
  */
 void idle()
 {
-   double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-   zh = fmod(90*t,360);
    glutPostRedisplay();
 }
 
@@ -571,7 +591,7 @@ int main(int argc,char* argv[])
    glutInitWindowSize(600,600);
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    //  Create the window
-   glutCreateWindow("Objects");
+   glutCreateWindow("Connor Guerin - 3D Scene");
    //  Tell GLUT to call "idle" when there is nothing else to do
    glutIdleFunc(idle);
    //  Tell GLUT to call "display" when the scene should be drawn
