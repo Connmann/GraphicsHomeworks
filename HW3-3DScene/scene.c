@@ -8,6 +8,7 @@
  *  a          Toggle axes
  *  arrows     Change view angle
  *  0          Reset view angle
+ *  c/C        Change color scheme
  *  ESC        Exit
  */
 #include <stdio.h>
@@ -26,6 +27,7 @@ int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int axes=1;       //  Display axes
 int mode=0;       //  What to display
+int color=0;      //Color Scheme
 
 //  Cosine and Sine in degrees
 #define Cos(x) (cos((x)*3.1415927/180))
@@ -59,7 +61,8 @@ void Print(const char* format , ...)
  */
 static void cube(double x,double y,double z,
                  double dx,double dy,double dz,
-                 double th)
+                 double th,
+                 int w)
 {
    //  Save transformation
    glPushMatrix();
@@ -69,26 +72,6 @@ static void cube(double x,double y,double z,
    glScaled(dx,dy,dz);
    //  Cube
    glBegin(GL_QUADS);
-   //  Front
-   glVertex3f(-1,-1, 1);
-   glVertex3f(+1,-1, 1);
-   glVertex3f(+1,+1, 1);
-   glVertex3f(-1,+1, 1);
-   //  Back
-   glVertex3f(+1,-1,-1);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,+1,-1);
-   glVertex3f(+1,+1,-1);
-   //  Right
-   glVertex3f(+1,-1,+1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(+1,+1,-1);
-   glVertex3f(+1,+1,+1);
-   //  Left
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,-1,+1);
-   glVertex3f(-1,+1,+1);
-   glVertex3f(-1,+1,-1);
    //  Top
    glVertex3f(-1,+1,+1);
    glVertex3f(+1,+1,+1);
@@ -99,6 +82,30 @@ static void cube(double x,double y,double z,
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,-1,+1);
    glVertex3f(-1,-1,+1);
+   //  Right
+   glVertex3f(+1,-1,+1);
+   glVertex3f(+1,-1,-1);
+   glVertex3f(+1,+1,-1);
+   glVertex3f(+1,+1,+1);
+   //  Left
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,-1,+1);
+   glVertex3f(-1,+1,+1);
+   glVertex3f(-1,+1,-1);
+
+   //Color to add windows
+   if(w == 1) glColor3f(0.8, 0.8, 1);
+   //  Front
+   glVertex3f(-1,-1, 1);
+   glVertex3f(+1,-1, 1);
+   glVertex3f(+1,+1, 1);
+   glVertex3f(-1,+1, 1);
+   //  Back
+   glVertex3f(+1,-1,-1);
+   glVertex3f(-1,-1,-1);
+   glVertex3f(-1,+1,-1);
+   glVertex3f(+1,+1,-1);
+   
    //  End
    glEnd();
    //  Undo transformations
@@ -125,13 +132,13 @@ static void wheel(double x,double y,double z,
    for (th=0;th<=360;th+=s)
    {
       double ph = d-90;
-      glVertex3d(Sin(th)*Cos(ph) , Cos(th)*Cos(ph), -0.05);
+      glVertex3d(Sin(th)*Cos(ph), Cos(th)*Cos(ph), -0.05);
    }
    glEnd();
 
    glBegin(GL_TRIANGLE_FAN);
    glVertex3f(0, 0, 0.05);
-   for (th=0;th<=360;th+=s)
+   for (th=360;th>=0;th-=s)
    {
       double ph = d-90;
       glVertex3d(Sin(th)*Cos(ph) , Cos(th)*Cos(ph), 0.05);
@@ -164,7 +171,7 @@ static void wheel(double x,double y,double z,
 
    glBegin(GL_TRIANGLE_FAN);
    glVertex3f(0, 0, 0.055);
-   for (th=0;th<=360;th+=s)
+   for (th=360;th>=0;th-=s)
    {
       double ph = d-90;
       glVertex3d(Sin(th)*Cos(ph) , Cos(th)*Cos(ph), 0.055);
@@ -189,13 +196,15 @@ static void bumper(double x,double y,double z,
    glScaled(dx,dy,dz);
 
    //Bumper
-   glBegin(GL_POLYGON);
-   glVertex3f(0,0.2,0.4);
-   glVertex3f(0,0.2,-0.4);
-   glVertex3f(0.1,0.2,-0.35);
-   glVertex3f(0.1,0.2,0.35);
-   glEnd();
+   // glColor3f(1, 1, 1);
+   // glBegin(GL_POLYGON);
+   // glVertex3f(0,0.2,-0.4);
+   // glVertex3f(0,0.2,0.4);
+   // glVertex3f(0.1,0.2,0.35);
+   // glVertex3f(0.1,0.2,-0.35);
+   // glEnd();
 
+   if(color == 1) glColor3f(1, 0, 1);
    glBegin(GL_POLYGON);
    glVertex3f(0,0,0.4);
    glVertex3f(0,0,-0.4);
@@ -203,36 +212,43 @@ static void bumper(double x,double y,double z,
    glVertex3f(0.1,0,0.35);
    glEnd();
 
-   glBegin(GL_QUAD_STRIP);
-   glVertex3f(0, 0, 0.4);
+   if(color == 1) glColor3f(1, 0, 0);
+   glBegin(GL_QUADS);
    glVertex3f(0.1, 0, 0.35);
+   glVertex3f(0.1, 0.2, 0.35);
    glVertex3f(0, 0.2, 0.4);
-   glVertex3f(0.1, 0.2, 0.35);
+   glVertex3f(0, 0, 0.4);
 
-   glVertex3f(0.1, 0, 0.35);
+   if(color == 1) glColor3f(0.5, 1, 0.5);
    glVertex3f(0.1, 0, -0.35);
+   glVertex3f(0.1, 0.2, -0.35);
    glVertex3f(0.1, 0.2, 0.35);
-   glVertex3f(0.1, 0.2, -0.35);
-      
-   glVertex3f(0, 0, -0.4);
+   glVertex3f(0.1, 0, 0.35);
+
+   if(color == 1) glColor3f(1, 0.5, 1);
    glVertex3f(0.1, 0, -0.35);
-   glVertex3f(0.0, 0.2, -0.4);
+   glVertex3f(0, 0, -0.4);
+   glVertex3f(0, 0.2, -0.4);
    glVertex3f(0.1, 0.2, -0.35);
+   
    glEnd();
 
    //Upper Bumper
    glBegin(GL_QUADS);
-   glVertex3f(0.1, 0.2, 0.35);
+   if(color == 1) glColor3f(1, 0.8, 1);
    glVertex3f(0, 0.25, 0.35);
-   glVertex3f(0, 0.25, -0.35);
+   glVertex3f(0.1, 0.2, 0.35);
    glVertex3f(0.1, 0.2, -0.35);
+   glVertex3f(0, 0.25, -0.35);
    glEnd();
 
    glBegin(GL_TRIANGLES);
-   glVertex3f(0, 0.25, 0.35);
-   glVertex3f(0.1, 0.2, 0.35);
+   if(color == 1) glColor3f(1, 0.5, 0.7);
    glVertex3f(0, 0.2, 0.4);
+   glVertex3f(0.1, 0.2, 0.35);
+   glVertex3f(0, 0.25, 0.35);
 
+   if(color == 1) glColor3f(0.6, 0.5, 1);
    glVertex3f(0, 0.25, -0.35);
    glVertex3f(0.1, 0.2, -0.35);
    glVertex3f(0, 0.2, -0.4);
@@ -267,10 +283,10 @@ static void bumper(double x,double y,double z,
       glColor3f(0.1,0.1,0.1);
       //Grill
       glBegin(GL_QUADS);
-      glVertex3f(0.11, 0.05, 0.18);
       glVertex3f(0.11, 0.15, 0.18);
-      glVertex3f(0.11, 0.15, -0.18);
+      glVertex3f(0.11, 0.05, 0.18);
       glVertex3f(0.11, 0.05, -0.18);
+      glVertex3f(0.11, 0.15, -0.18);
       glEnd();
    }
 
@@ -293,9 +309,9 @@ static void car(double x,double y,double z,
    glColor3f(cr, cb, cg);
   
    //Lower Body
-   cube(0,0.1,0, 0.8,0.1,0.4, 0);
+   cube(0,0.1,0, 0.8,0.1,0.4, 0, 0);
    //Cabin
-   cube(-0.1,0.3,0, 0.3,0.1,0.35, 0);
+   cube(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
 
    wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
    wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
@@ -309,40 +325,45 @@ static void car(double x,double y,double z,
    glColor3f(cr, cb, cg);
 
    //Hood
-   glBegin(GL_QUAD_STRIP);
-   glVertex3f(0.8, 0.2, 0.4);
-   glVertex3f(-0.8, 0.2, 0.4);
-   glVertex3f(0.8, 0.25, 0.35);
+   glBegin(GL_QUADS);
+   if(color == 1) glColor3f(0.5, 0.6, 0.2);
    glVertex3f(-0.8, 0.25, 0.35);
-
+   glVertex3f(-0.8, 0.2, 0.4);
+   glVertex3f(0.8, 0.2, 0.4);
    glVertex3f(0.8, 0.25, 0.35);
+
+   if(color == 1) glColor3f(0.9, 0.1, 0.6);
    glVertex3f(0.4, 0.25, 0.35);
+   glVertex3f(0.8, 0.25, 0.35);
    glVertex3f(0.8, 0.25, -0.35);
    glVertex3f(0.4, 0.25, -0.35);
    
-   glVertex3f(0.8, 0.2, -0.4);
+   if(color == 1) glColor3f(0.6, 0, 0.1);
    glVertex3f(-0.8, 0.2, -0.4);
-   glVertex3f(0.8, 0.25, -0.35);
    glVertex3f(-0.8, 0.25, -0.35);
+   glVertex3f(0.8, 0.25, -0.35);
+   glVertex3f(0.8, 0.2, -0.4);
+   
    glEnd();
 
    //Windshield
    glColor3f(0.8, 0.8, 1);
    glBegin(GL_QUADS);
-   glVertex3f(0.4,0.25,-0.35);
    glVertex3f(0.4,0.25,0.35);
-   glVertex3f(0.2,0.4,0.35);
+   glVertex3f(0.4,0.25,-0.35);
    glVertex3f(0.2,0.4,-0.35);
+   glVertex3f(0.2,0.4,0.35);
    glEnd();
 
    glBegin(GL_TRIANGLES);
-   glVertex3f(0.4,0.25,0.35);
-   glVertex3f(0.2,0.25,0.35);
    glVertex3f(0.2,0.4,0.35);
+   glVertex3f(0.2,0.25,0.35);
+   glVertex3f(0.4,0.25,0.35);
 
    glVertex3f(0.4,0.25,-0.35);
    glVertex3f(0.2,0.25,-0.35);
    glVertex3f(0.2,0.4,-0.35);
+   
    glEnd();
 
    glColor3f(cr, cb, cg);
@@ -353,10 +374,11 @@ static void car(double x,double y,double z,
 
    //Trunk
    glBegin(GL_QUADS);
-   glVertex3f(-0.8, 0.25, 0.35);
+   if(color == 1) glColor3f(.8, 0, 0.6);
    glVertex3f(-0.8, 0.25, -0.35);
-   glVertex3f(-0.6, 0.25, -0.35);
+   glVertex3f(-0.8, 0.25, 0.35);
    glVertex3f(-0.6, 0.25, 0.35);
+   glVertex3f(-0.6, 0.25, -0.35);
    glEnd();
 
    //Rear Window
@@ -373,31 +395,36 @@ static void car(double x,double y,double z,
    glVertex3f(-0.4,0.25,0.35);
    glVertex3f(-0.4,0.4,0.35);
    
-   glVertex3f(-0.6,0.25,-0.35);
-   glVertex3f(-0.4,0.25,-0.35);
    glVertex3f(-0.4,0.4,-0.35);
+   glVertex3f(-0.4,0.25,-0.35);
+   glVertex3f(-0.6,0.25,-0.35);
+   
    glEnd();
 
    glColor3f(0.1,0.1,0.1);
    //Spoiler
-   cube(-0.75,0.28,0.3, 0.02,0.03,0.02, 0);
-   cube(-0.75,0.28,-0.3, 0.02,0.03,0.02, 0);
+   cube(-0.75,0.28,0.3, 0.02,0.03,0.02, 0, 0);
+   cube(-0.75,0.28,-0.3, 0.02,0.03,0.02, 0, 0);
 
-   glBegin(GL_QUAD_STRIP);
+   glBegin(GL_QUADS);
+   if(color == 1) glColor3f(0.1,1,0.1);
    glVertex3f(-0.7,0.31,-0.35);
-   glVertex3f(-0.8,0.31,-0.35);
    glVertex3f(-0.7,0.31,0.35);
    glVertex3f(-0.8,0.31,0.35);
-  
-   glVertex3f(-0.7,0.31,-0.35);
-   glVertex3f(-0.8,0.33,-0.35);
-   glVertex3f(-0.7,0.31,0.35);
-   glVertex3f(-0.8,0.33,0.35);
-
    glVertex3f(-0.8,0.31,-0.35);
+   
+   if(color == 1) glColor3f(0.1,0.5,0.1);
    glVertex3f(-0.8,0.33,-0.35);
-   glVertex3f(-0.8,0.31,0.35);
    glVertex3f(-0.8,0.33,0.35);
+   glVertex3f(-0.7,0.31,0.35);
+   glVertex3f(-0.7,0.31,-0.35);
+
+   if(color == 1) glColor3f(0,0,1);
+   glVertex3f(-0.8,0.33,0.35);
+   glVertex3f(-0.8,0.33,-0.35);
+   glVertex3f(-0.8,0.31,-0.35);
+   glVertex3f(-0.8,0.31,0.35);
+   
    glEnd();
 
    glColor3f(cr, cb, cg);
@@ -407,9 +434,19 @@ static void car(double x,double y,double z,
    glVertex3f(-0.82,0.31,-0.35);
    glVertex3f(-0.82,0.35,-0.35);
 
+   glVertex3f(-0.82,0.35,0.35);
+   glVertex3f(-0.82,0.31,0.35);
+   glVertex3f(-0.68,0.31,0.35);
+   
+   //Duplicate to draw both sides when face culling is on
+   glVertex3f(-0.82,0.35,-0.35);
+   glVertex3f(-0.82,0.31,-0.35);
+   glVertex3f(-0.68,0.31,-0.35);
+   
    glVertex3f(-0.68,0.31,0.35);
    glVertex3f(-0.82,0.31,0.35);
    glVertex3f(-0.82,0.35,0.35);
+   
    glEnd();
 
    //Undo transformations
@@ -426,6 +463,9 @@ void display()
    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
+
+   //Enable Face Culling
+   glEnable(GL_CULL_FACE);
 
    //  Undo previous transformations
    glLoadIdentity();
@@ -465,7 +505,7 @@ void display()
 
          //Parking surface
          glColor3f(0.4, 0.4, 0.4);
-         cube(0, -0.23, 0, 2,0.1,2, 0);
+         cube(0, -0.23, 0, 2,0.1,2, 0, 0);
          break;
    }
 
@@ -497,6 +537,11 @@ void display()
    //Print the current mode
    glWindowPos2i(150,10);
    Print("Mode=%d",mode);
+
+   //Print the current color mode
+   glWindowPos2i(250,10);
+   Print("Color=%d",color);
+
    //  Render the scene
    glFlush();
    //  Make the rendered scene visible
@@ -546,6 +591,8 @@ void key(unsigned char ch,int x,int y)
       mode = (mode+1)%5;
    else if (ch == 'M')
       mode = (mode+4)%5;
+   else if (ch == 'c' || ch == 'C')
+      color = 1-color;
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
