@@ -1,15 +1,17 @@
 /*
- *  Homework 3 - 3D Scene
- *
+ *  Homework 4 - Projections
  *  Connor Guerin
  *
  *  Key bindings:
- *  m/M        Cycle through different sets of objects
+ *  m          Toggle between perspective and orthogonal
+ *  +/-        Changes field of view for perspective
  *  a          Toggle axes
  *  arrows     Change view angle
+ *  PgDn/PgUp  Zoom in and out
  *  0          Reset view angle
- *  c/C        Change color scheme
  *  ESC        Exit
+ *  w/s        Move forwards/backwards
+ *  c          Change color mode
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,15 +25,29 @@
 #include <GL/glut.h>
 #endif
 
+int axes=0;       //  Display axes
+int mode=0;       //  Projection mode
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
-int axes=1;       //  Display axes
-int mode=0;       //  What to display
+int fov=55;       //  Field of view (for perspective)
+double asp=1;     //  Aspect ratio
+double dim=6.0;   //  Size of world
 int color=0;      //Color Scheme
+double fpMoveInc = 0.05; //Multiplier for how much to move each keystroke in FP mode
 
-//  Cosine and Sine in degrees
-#define Cos(x) (cos((x)*3.1415927/180))
-#define Sin(x) (sin((x)*3.1415927/180))
+//First person camera location
+double fpX = 0;
+double fpY = 0.45;
+double fpZ = 0;
+
+//x, y, z for refrence point in glLookAt() for FP mode
+double refX = 5;
+double refY = 0;
+double refZ = 0;
+
+//  Macro for sin & cos in degrees
+#define Cos(th) cos(3.1415926/180*(th))
+#define Sin(th) sin(3.1415926/180*(th))
 
 /*
  *  Convenience routine to output raster text
@@ -52,12 +68,35 @@ void Print(const char* format , ...)
       glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,*ch++);
 }
 
+/*
+ *  Set projection
+ */
+static void Project()
+{
+   //  Tell OpenGL we want to manipulate the projection matrix
+   glMatrixMode(GL_PROJECTION);
+   //  Undo previous transformations
+   glLoadIdentity();
+   //  Perspective transformation
+   if (mode == 0)
+      gluPerspective(fov,asp,dim/4,4*dim);
+   //  Orthogonal projection
+   else if (mode == 1)
+      glOrtho(-asp*dim,+asp*dim, -dim,+dim, -dim,+dim);
+   else if (mode == 2)
+      gluPerspective(fov,asp,0.1,4*dim);
+   //  Switch to manipulating the model matrix
+   glMatrixMode(GL_MODELVIEW);
+   //  Undo previous transformations
+   glLoadIdentity();
+}
 
 /*
  *  Draw a cube
  *     at (x,y,z)
  *     dimensions (dx,dy,dz)
  *     rotated th about the y axis
+ *     w (1 to color windows for car body, 0 otherwise)
  */
 static void cube(double x,double y,double z,
                  double dx,double dy,double dz,
@@ -180,7 +219,6 @@ static void wheel(double x,double y,double z,
 
    //  Undo transformations
    glPopMatrix();
-
 }
 
 static void bumper(double x,double y,double z,
@@ -194,6 +232,10 @@ static void bumper(double x,double y,double z,
    glTranslated(x,y,z);
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
+
+   //Offset the bumper so that the lights and grill are drawn directly on the surface
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1,1);
 
    //Bumper
    if(color == 1) glColor3f(1, 0, 1);
@@ -246,6 +288,9 @@ static void bumper(double x,double y,double z,
    glVertex3f(0, 0.2, -0.4);
    glEnd();
 
+   //  Disable polygon offset
+   glDisable(GL_POLYGON_OFFSET_FILL);
+
    //Lights (taillights or headlights)
    if(m == 1) {
       glColor3f(1, 1, 0.8);
@@ -254,20 +299,20 @@ static void bumper(double x,double y,double z,
    }
 
    glBegin(GL_TRIANGLE_FAN);
-   glVertex3f(0.11, 0.13, -0.25);
+   glVertex3f(0.1, 0.13, -0.25);
    for (th=0;th<=360;th+=10)
    {
       double ph = 3-90;
-      glVertex3d(0.11, 0.13+(Cos(th)*Cos(ph)), -0.25+(Sin(th)*Cos(ph)));
+      glVertex3d(0.1, 0.13+(Cos(th)*Cos(ph)), -0.25+(Sin(th)*Cos(ph)));
    }
    glEnd();
 
    glBegin(GL_TRIANGLE_FAN);
-   glVertex3f(0.11, 0.13, 0.25);
+   glVertex3f(0.1, 0.13, 0.25);
    for (th=0;th<=360;th+=10)
    {
       double ph = 3-90;
-      glVertex3d(0.11, 0.13+(Cos(th)*Cos(ph)), 0.25+(Sin(th)*Cos(ph)));
+      glVertex3d(0.1, 0.13+(Cos(th)*Cos(ph)), 0.25+(Sin(th)*Cos(ph)));
    }
    glEnd();
 
@@ -275,10 +320,10 @@ static void bumper(double x,double y,double z,
       glColor3f(0.1,0.1,0.1);
       //Grill
       glBegin(GL_QUADS);
-      glVertex3f(0.11, 0.15, 0.18);
-      glVertex3f(0.11, 0.05, 0.18);
-      glVertex3f(0.11, 0.05, -0.18);
-      glVertex3f(0.11, 0.15, -0.18);
+      glVertex3f(0.1, 0.15, 0.18);
+      glVertex3f(0.1, 0.05, 0.18);
+      glVertex3f(0.1, 0.05, -0.18);
+      glVertex3f(0.1, 0.15, -0.18);
       glEnd();
    }
 
@@ -455,55 +500,60 @@ void display()
    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
-
    //Enable Face Culling
    glEnable(GL_CULL_FACE);
-
    //  Undo previous transformations
    glLoadIdentity();
-   //  Set view angle
-   glRotatef(ph,1,0,0);
-   glRotatef(th,0,1,0);
-
-
-   switch(mode) {
-      case 0:
-         //Red car
-         car(-1,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
-         break;   
-      case 1:
-         //Blue car
-         car(-1,0,0.8, 1,1,1, 0, 0,0,0.8);
-         break;
-      case 2:
-         //Green car
-         car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
-         break;
-      case 3:
-         //Teal car
-         car(1.2,0,-0.8, 1,1,1, 220, 0,0.8,0.8);
-         break;
-      case 4:
-         //All cars and surface
-
-         //Red car
-         car(-1,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
-         //Blue car
-         car(-1,0,0.8, 1,1,1, 0, 0,0,0.8);
-         //Green car
-         car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
-         //Teal car
-         car(1.2,0,-0.8, 1,1,1, 220, 0,0.8,0.8);
-
-         //Parking surface
-         glColor3f(0.4, 0.4, 0.4);
-         cube(0, -0.23, 0, 2,0.1,2, 0, 0);
-         break;
+   //  Perspective - set eye position
+   if (mode == 0)
+   {
+      double Ex = -2*dim*Sin(th)*Cos(ph);
+      double Ey = +2*dim        *Sin(ph);
+      double Ez = +2*dim*Cos(th)*Cos(ph);
+      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
    }
+   //  Orthogonal - set world orientation
+   else if (mode == 1)
+   {
+      glRotatef(ph,1,0,0);
+      glRotatef(th,0,1,0);
+   }
+   //First Person Perspective
+   else if (mode == 2)
+   {
+      //Lock the dim to avoid weird behavior when the camera strays beyond it
+      dim = 7.0;
 
-   //  White
-   glColor3f(1,1,1);
+      refX = (dim * Sin(th)) + fpX;
+      refY = (dim * Sin(ph));
+      refZ = (dim * -Cos(th)) + fpZ;
+      gluLookAt(fpX,fpY,fpZ, refX,refY,refZ, 0,1,0);
+   }
+   
+   //All cars and surface
+   //Red car
+   car(-2,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
+   //Blue car
+   car(-2,0,0.8, 1,1,1, 0, 0,0,0.8);
+   //Green car
+   car(1,0,0.8, 1,1,1, 180, 0,0.5,0);
+   //Teal car
+   car(1.2,0,-2, 1,1,1, 220, 0,0.8,0.8);
+
+   //Parking surface
+   glColor3f(0.4, 0.4, 0.4);
+   cube(0,-0.24,0, 4,0.1,4, 0, 0);
+
+   //World edges
+   glColor3f(0, 0.3, 0.1);
+   cube(4.2,-0.24,0, 0.2,0.2,4.4, 0, 0);
+   cube(-4.2,-0.24,0, 0.2,0.2,4.4, 0, 0);
+   glColor3f(0, 0.5, 0.1);
+   cube(0,-0.24,4.2, 0.2,0.2,4, 90, 0);
+   cube(0,-0.24,-4.2, 0.2,0.2,4, 90, 0);
+
    //  Draw axes
+   glColor3f(1,1,1);
    if (axes)
    {
       glBegin(GL_LINES);
@@ -522,21 +572,11 @@ void display()
       glRasterPos3d(0.0,0.0,len);
       Print("Z");
    }
-   //  Five pixels from the lower left corner of the window
-   glWindowPos2i(10,10);
-   //  Print the text string
-   Print("Angle=%d,%d",th,ph);
-   //Print the current mode
-   glWindowPos2i(150,10);
-   Print("Mode=%d",mode);
-
-   //Print the current color mode
-   glWindowPos2i(250,10);
-   Print("Color=%d",color);
-
-   //  Render the scene
+   //  Display parameters
+   glWindowPos2i(5,5);
+   Print("Angle=%d,%d  Dim=%.1f  FOV=%d  Projection=%d  ColorMode=%d",th,ph,dim,fov,mode,color);
+   //  Render the scene and make it visible
    glFlush();
-   //  Make the rendered scene visible
    glutSwapBuffers();
 }
 
@@ -546,20 +586,32 @@ void display()
 void special(int key,int x,int y)
 {
    //  Right arrow key - increase angle by 5 degrees
-   if (key == GLUT_KEY_RIGHT)
+   if (key == GLUT_KEY_RIGHT) {
       th += 5;
+   }
    //  Left arrow key - decrease angle by 5 degrees
-   else if (key == GLUT_KEY_LEFT)
+   else if (key == GLUT_KEY_LEFT) {
       th -= 5;
+   }
    //  Up arrow key - increase elevation by 5 degrees
-   else if (key == GLUT_KEY_UP)
+   else if (key == GLUT_KEY_UP) {
       ph += 5;
+   }
    //  Down arrow key - decrease elevation by 5 degrees
-   else if (key == GLUT_KEY_DOWN)
+   else if (key == GLUT_KEY_DOWN) {
       ph -= 5;
+   }
+   //  PageUp key - increase dim
+   else if (key == GLUT_KEY_PAGE_UP)
+      dim += 0.1;
+   //  PageDown key - decrease dim
+   else if (key == GLUT_KEY_PAGE_DOWN && dim>1)
+      dim -= 0.1;
    //  Keep angles to +/-360 degrees
    th %= 360;
    ph %= 360;
+   //  Update projection
+   Project();
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -572,19 +624,37 @@ void key(unsigned char ch,int x,int y)
    //  Exit on ESC
    if (ch == 27)
       exit(0);
-   //  Reset view angle
-   else if (ch == '0')
+   //  Reset view angle and position
+   else if (ch == '0') {
       th = ph = 0;
+      fpX = fpY = 0;
+   }
    //  Toggle axes
    else if (ch == 'a' || ch == 'A')
       axes = 1-axes;
    //  Switch display mode
-   else if (ch == 'm')
-      mode = (mode+1)%5;
-   else if (ch == 'M')
-      mode = (mode+4)%5;
+   else if (ch == 'm' || ch == 'M') {
+      mode = (mode+1)%3;
+      //Reset the vertical angle when switching to first person mode.
+      if (mode == 2) ph = 0;
+   }
+   //  Change field of view angle
+   else if (ch == '-' && ch>1)
+      fov--;
+   else if (ch == '+' && ch<179)
+      fov++;
    else if (ch == 'c' || ch == 'C')
       color = 1-color;
+   else if (ch == 'w' || ch == 'W') {
+      fpX += fpMoveInc * refX;
+      fpZ += fpMoveInc * refZ;
+   }
+   else if (ch == 's' || ch == 'S') {
+      fpX -= fpMoveInc * refX;
+      fpZ -= fpMoveInc * refZ;
+   }
+   //  Reproject
+   Project();
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -594,21 +664,12 @@ void key(unsigned char ch,int x,int y)
  */
 void reshape(int width,int height)
 {
-   const double dim=2.5;
    //  Ratio of the width to the height of the window
-   double w2h = (height>0) ? (double)width/height : 1;
+   asp = (height>0) ? (double)width/height : 1;
    //  Set the viewport to the entire window
    glViewport(0,0, width,height);
-   //  Tell OpenGL we want to manipulate the projection matrix
-   glMatrixMode(GL_PROJECTION);
-   //  Undo previous transformations
-   glLoadIdentity();
-   //  Orthogonal projection
-   glOrtho(-w2h*dim,+w2h*dim, -dim,+dim, -dim,+dim);
-   //  Switch to manipulating the model matrix
-   glMatrixMode(GL_MODELVIEW);
-   //  Undo previous transformations
-   glLoadIdentity();
+   //  Set projection
+   Project();
 }
 
 /*
@@ -624,22 +685,16 @@ void idle()
  */
 int main(int argc,char* argv[])
 {
-   //  Initialize GLUT and process user parameters
+   //  Initialize GLUT
    glutInit(&argc,argv);
    //  Request double buffered, true color window with Z buffering at 600x600
-   glutInitWindowSize(600,600);
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-   //  Create the window
-   glutCreateWindow("Connor Guerin - 3D Scene");
-   //  Tell GLUT to call "idle" when there is nothing else to do
-   glutIdleFunc(idle);
-   //  Tell GLUT to call "display" when the scene should be drawn
+   glutInitWindowSize(600,600);
+   glutCreateWindow("Connor Guerin - Scene With Projections");
+   //  Set callbacks
    glutDisplayFunc(display);
-   //  Tell GLUT to call "reshape" when the window is resized
    glutReshapeFunc(reshape);
-   //  Tell GLUT to call "special" when an arrow key is pressed
    glutSpecialFunc(special);
-   //  Tell GLUT to call "key" when a key is pressed
    glutKeyboardFunc(key);
    //  Pass control to GLUT so it can interact with the user
    glutMainLoop();
