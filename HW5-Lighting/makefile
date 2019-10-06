@@ -1,5 +1,5 @@
-# Example 9
-EXE=hw4
+# Example 13
+EXE=hw5
 
 # Main target
 all: $(EXE)
@@ -23,6 +23,19 @@ endif
 CLEAN=rm -f $(EXE) *.o *.a
 endif
 
+# Dependencies
+ex13.o: ex13.c CSCIx229.h
+fatal.o: fatal.c CSCIx229.h
+loadtexbmp.o: loadtexbmp.c CSCIx229.h
+print.o: print.c CSCIx229.h
+project.o: project.c CSCIx229.h
+errcheck.o: errcheck.c CSCIx229.h
+object.o: object.c CSCIx229.h
+
+#  Create archive
+CSCIx229.a:fatal.o loadtexbmp.o print.o project.o errcheck.o object.o
+	ar -rcs $@ $^
+
 # Compile rules
 .c.o:
 	gcc -c $(CFLG) $<
@@ -30,7 +43,7 @@ endif
 	g++ -c $(CFLG) $<
 
 #  Link
-hw4:hw4.o
+hw5:hw5.o CSCIx229.a
 	gcc -O3 -o $@ $^   $(LIBS)
 
 #  Clean
