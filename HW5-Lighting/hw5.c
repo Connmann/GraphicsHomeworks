@@ -1,7 +1,6 @@
 /*
- *  Lighting
- *
- *  Demonstrates basic lighting using a sphere and a cube.
+ *  HW5 - Lighting
+ *  Connor Guerin
  *
  *  Key bindings:
  *  l          Toggles lighting
@@ -43,22 +42,14 @@ int distance  =   5;  // Light distance
 int inc       =  10;  // Ball increment
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
-int emission  =   0;  // Emission intensity (%)
-int ambient   =  30;  // Ambient intensity (%)
+int emission  =  30;  // Emission intensity (%)
+int ambient   =  10;  // Ambient intensity (%)
 int diffuse   = 100;  // Diffuse intensity (%)
 int specular  =   0;  // Specular intensity (%)
 int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
-float ylight  =   0;  // Elevation of light
-
-int color=0;      //Color Scheme
-double fpMoveInc = 0.05; //Multiplier for how much to move each keystroke in FP mode
-
-//First person camera location
-double fpX = 0;
-double fpY = 0.45;
-double fpZ = 0;
+float ylight  = 1.5;  // Elevation of light
 
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 5;
@@ -71,7 +62,7 @@ double refZ = 0;
  *     dimensions (dx,dy,dz)
  *     rotated th about the y axis
  */
-static void cube2(double x,double y,double z,
+static void cube(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th)
 {
@@ -87,45 +78,40 @@ static void cube2(double x,double y,double z,
    glTranslated(x,y,z);
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
+
    //  Cube
    glBegin(GL_QUADS);
    //  Front
-   glColor3f(1,0,0);
    glNormal3f( 0, 0, 1);
    glVertex3f(-1,-1, 1);
    glVertex3f(+1,-1, 1);
    glVertex3f(+1,+1, 1);
    glVertex3f(-1,+1, 1);
    //  Back
-   glColor3f(0,0,1);
    glNormal3f( 0, 0,-1);
    glVertex3f(+1,-1,-1);
    glVertex3f(-1,-1,-1);
    glVertex3f(-1,+1,-1);
    glVertex3f(+1,+1,-1);
    //  Right
-   glColor3f(1,1,0);
    glNormal3f(+1, 0, 0);
    glVertex3f(+1,-1,+1);
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,+1,-1);
    glVertex3f(+1,+1,+1);
    //  Left
-   glColor3f(0,1,0);
    glNormal3f(-1, 0, 0);
    glVertex3f(-1,-1,-1);
    glVertex3f(-1,-1,+1);
    glVertex3f(-1,+1,+1);
    glVertex3f(-1,+1,-1);
    //  Top
-   glColor3f(0,1,1);
    glNormal3f( 0,+1, 0);
    glVertex3f(-1,+1,+1);
    glVertex3f(+1,+1,+1);
    glVertex3f(+1,+1,-1);
    glVertex3f(-1,+1,-1);
    //  Bottom
-   glColor3f(1,0,1);
    glNormal3f( 0,-one, 0);
    glVertex3f(-1,-1,-1);
    glVertex3f(+1,-1,-1);
@@ -187,13 +173,13 @@ static void ball(double x,double y,double z,double r)
 }
 
 /*
- *  Draw a cube
+ *  Draw a section of the car body
  *     at (x,y,z)
  *     dimensions (dx,dy,dz)
  *     rotated th about the y axis
  *     w (1 to color windows for car body, 0 otherwise)
  */
-static void cube(double x,double y,double z,
+static void body(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th,
                  int w)
@@ -225,18 +211,6 @@ static void cube(double x,double y,double z,
    glVertex3f(+1,-1,-1);
    glVertex3f(+1,-1,+1);
    glVertex3f(-1,-1,+1);
-   //  Right
-   glNormal3f(+1, 0, 0);
-   glVertex3f(+1,-1,+1);
-   glVertex3f(+1,-1,-1);
-   glVertex3f(+1,+1,-1);
-   glVertex3f(+1,+1,+1);
-   //  Left
-   glNormal3f(-1, 0, 0);
-   glVertex3f(-1,-1,-1);
-   glVertex3f(-1,-1,+1);
-   glVertex3f(-1,+1,+1);
-   glVertex3f(-1,+1,-1);
 
    //Color to add windows
    if(w == 1) glColor3f(0.8, 0.8, 1);
@@ -282,9 +256,8 @@ static void wheel(double x,double y,double z,
 
    //Offset the tire so that the rim is in front of it
    glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1,1);
 
-   glColor3f(0.3,0.3,0.3);
+   glColor3f(0.1,0.1,0.1);
    //Wheel
    glBegin(GL_TRIANGLE_FAN);
    glNormal3f(0, 0, -1);
@@ -328,26 +301,35 @@ static void wheel(double x,double y,double z,
    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
 
    d = d * 0.7;
-   glColor3f(0.8,0.8,0.8);
+   glColor3f(0.1,0.1,0.1);
    glBegin(GL_TRIANGLE_FAN);
    glNormal3f(0, 0, -1);
    glVertex3f(0, 0, -0.05);
+   int interval = 0;
    for (th=0;th<=360;th+=s)
    {
+      if (interval % 4 != 0) glColor3f(0.1,0.1,0.1); else glColor3f(0.8,0.8,0.8);
+      interval++;
       double ph = d-90;
       glVertex3d(Sin(th)*Cos(ph) , Cos(th)*Cos(ph), -0.05);
    }
    glEnd();
 
+   glColor3f(0.1,0.1,0.1);
    glBegin(GL_TRIANGLE_FAN);
    glNormal3f(0, 0, 1);
    glVertex3f(0, 0, 0.05);
+   interval = 0;
    for (th=360;th>=0;th-=s)
    {
+      if (interval % 4 != 0) glColor3f(0.1,0.1,0.1); else glColor3f(0.8,0.8,0.8);
+      interval++;
       double ph = d-90;
       glVertex3d(Sin(th)*Cos(ph) , Cos(th)*Cos(ph), 0.05);
    }
    glEnd();
+
+   glEnable(GL_POLYGON_OFFSET_FILL);
 
    //  Undo transformations
    glPopMatrix();
@@ -374,11 +356,9 @@ static void bumper(double x,double y,double z,
 
    //Offset the bumper so that the lights and grill are drawn directly on the surface
    glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1,1);
 
    //Bumper
 
-   if(color == 1) glColor3f(1, 0, 1);
    //Base
    glBegin(GL_POLYGON);
    glNormal3f(0, -1, 0);
@@ -389,7 +369,6 @@ static void bumper(double x,double y,double z,
    glEnd();
 
    //Front Panels
-   if(color == 1) glColor3f(1, 0, 0);
    glBegin(GL_QUADS);
    glNormal3f(0.447214, 0, 0.894427);
    glVertex3f(0.1, 0, 0.35);
@@ -397,14 +376,12 @@ static void bumper(double x,double y,double z,
    glVertex3f(0, 0.2, 0.4);
    glVertex3f(0, 0, 0.4);
 
-   if(color == 1) glColor3f(0.5, 1, 0.5);
    glNormal3f(1, 0, 0);
    glVertex3f(0.1, 0, -0.35);
    glVertex3f(0.1, 0.2, -0.35);
    glVertex3f(0.1, 0.2, 0.35);
    glVertex3f(0.1, 0, 0.35);
 
-   if(color == 1) glColor3f(1, 0.5, 1);
    glNormal3f(0.447214, 0, -0.894427);
    glVertex3f(0.1, 0, -0.35);
    glVertex3f(0, 0, -0.4);
@@ -415,7 +392,6 @@ static void bumper(double x,double y,double z,
 
    //Upper Bumper
    glBegin(GL_QUADS);
-   if(color == 1) glColor3f(1, 0.8, 1);
    glNormal3f(0.447214, 0.894427, 0);
    glVertex3f(0, 0.25, 0.35);
    glVertex3f(0.1, 0.2, 0.35);
@@ -424,13 +400,11 @@ static void bumper(double x,double y,double z,
    glEnd();
 
    glBegin(GL_TRIANGLES);
-   if(color == 1) glColor3f(1, 0.5, 0.7);
    glNormal3f(0.333333, 0.666667, 0.666667);
    glVertex3f(0, 0.2, 0.4);
    glVertex3f(0.1, 0.2, 0.35);
    glVertex3f(0, 0.25, 0.35);
 
-   if(color == 1) glColor3f(0.6, 0.5, 1);
    glNormal3f(0.333333, 0.666667, -0.666667);
    glVertex3f(0, 0.25, -0.35);
    glVertex3f(0.1, 0.2, -0.35);
@@ -440,12 +414,37 @@ static void bumper(double x,double y,double z,
    //  Disable polygon offset
    glDisable(GL_POLYGON_OFFSET_FILL);
 
+   if (m == 1) {
+      glColor3f(0.1,0.1,0.1);
+      //Grill
+      glBegin(GL_QUADS);
+      glNormal3f(1, 0, 0);
+      glVertex3f(0.1, 0.15, 0.18);
+      glVertex3f(0.1, 0.05, 0.18);
+      glVertex3f(0.1, 0.05, -0.18);
+      glVertex3f(0.1, 0.15, -0.18);
+      glEnd();
+   }
+
    //Lights (taillights or headlights)
+   float emColor[4];
    if(m == 1) {
+      emColor[0] = 1.0 * emission;
+      emColor[1] = 1.0 * emission;
+      emColor[2] = 0.8 * emission;
+      emColor[3] = 1.0 * emission;
       glColor3f(1, 1, 0.8);
    } else {
+      emColor[0] = 0.8 * emission;
+      emColor[1] = 0.0 * emission;
+      emColor[2] = 0.0 * emission;
+      emColor[3] = 1.0 * emission;
       glColor3f(.8, 0, 0);
    }
+
+   glMaterialf(GL_FRONT,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT,GL_SPECULAR,emColor);
+   glMaterialfv(GL_FRONT,GL_EMISSION,emColor);
 
    glBegin(GL_TRIANGLE_FAN);
    glNormal3f(1, 0, 0);
@@ -467,17 +466,7 @@ static void bumper(double x,double y,double z,
    }
    glEnd();
 
-   if (m == 1) {
-      glColor3f(0.1,0.1,0.1);
-      //Grill
-      glBegin(GL_QUADS);
-      glNormal3f(1, 0, 0);
-      glVertex3f(0.1, 0.15, 0.18);
-      glVertex3f(0.1, 0.05, 0.18);
-      glVertex3f(0.1, 0.05, -0.18);
-      glVertex3f(0.1, 0.15, -0.18);
-      glEnd();
-   }
+   glEnable(GL_POLYGON_OFFSET_FILL);
 
    //Undo transformations
    glPopMatrix();  
@@ -502,12 +491,7 @@ static void car(double x,double y,double z,
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
 
-   glColor3f(cr, cb, cg);
-  
-   //Lower Body
-   cube(0,0.1,0, 0.8,0.1,0.4, 0, 0);
-   //Cabin
-   cube(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
+   glPolygonOffset(1,1);
 
    wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
    wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
@@ -516,27 +500,39 @@ static void car(double x,double y,double z,
 
    glColor3f(cr, cb, cg);
 
+   //Lower Body
+   body(0,0.1,0, 0.8,0.1,0.4, 0, 0);
+   //Cabin
+   body(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
+
+   glColor3f(cr, cb, cg);
+
    //Front Bumper
    bumper(0.8,0,0, 1,1,1, 0, 1);
+
+   //  Set specular color to white
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
+   glEnable(GL_POLYGON_OFFSET_FILL);
+
    glColor3f(cr, cb, cg);
 
    //Hood
    glBegin(GL_QUADS);
-   if(color == 1) glColor3f(0.5, 0.6, 0.2);
    glNormal3f(0, 0.707107, 0.707107);
    glVertex3f(-0.8, 0.25, 0.35);
    glVertex3f(-0.8, 0.2, 0.4);
    glVertex3f(0.8, 0.2, 0.4);
    glVertex3f(0.8, 0.25, 0.35);
 
-   if(color == 1) glColor3f(0.9, 0.1, 0.6);
    glNormal3f(0, 1, 0);
    glVertex3f(0.4, 0.25, 0.35);
    glVertex3f(0.8, 0.25, 0.35);
    glVertex3f(0.8, 0.25, -0.35);
    glVertex3f(0.4, 0.25, -0.35);
    
-   if(color == 1) glColor3f(0.6, 0, 0.1);
    glNormal3f(0, 0.707107, -0.707107);
    glVertex3f(-0.8, 0.2, -0.4);
    glVertex3f(-0.8, 0.25, -0.35);
@@ -574,9 +570,12 @@ static void car(double x,double y,double z,
    bumper(-0.8,0,0, 1,1,1, 180, 0);
    glColor3f(cr, cb, cg);
 
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
    //Trunk
    glBegin(GL_QUADS);
-   if(color == 1) glColor3f(.8, 0, 0.6);
    glNormal3f(0,1,0);
    glVertex3f(-0.8, 0.25, -0.35);
    glVertex3f(-0.8, 0.25, 0.35);
@@ -609,25 +608,22 @@ static void car(double x,double y,double z,
 
    //Spoiler
    glColor3f(0.1,0.1,0.1);
-   cube(-0.75,0.28,0.3, 0.02,0.03,0.02, 0, 0);
-   cube(-0.75,0.28,-0.3, 0.02,0.03,0.02, 0, 0);
+   cube(-0.75,0.28,0.3, 0.02,0.03,0.02, 0);
+   cube(-0.75,0.28,-0.3, 0.02,0.03,0.02, 0);
 
    glBegin(GL_QUADS);
-   if(color == 1) glColor3f(0.1,1,0.1);
    glNormal3f(0, -1, 0);
    glVertex3f(-0.7,0.31,-0.35);
    glVertex3f(-0.7,0.31,0.35);
    glVertex3f(-0.8,0.31,0.35);
    glVertex3f(-0.8,0.31,-0.35);
    
-   if(color == 1) glColor3f(0.1,0.5,0.1);
    glNormal3f(0.196116, 0.980581, 0);
    glVertex3f(-0.8,0.33,-0.35);
    glVertex3f(-0.8,0.33,0.35);
    glVertex3f(-0.7,0.31,0.35);
    glVertex3f(-0.7,0.31,-0.35);
 
-   if(color == 1) glColor3f(0,0,1);
    glNormal3f(-1, 0, 0);
    glVertex3f(-0.8,0.33,0.35);
    glVertex3f(-0.8,0.33,-0.35);
@@ -740,8 +736,7 @@ void display()
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
 
-   //  Draw scene
-   //All cars and surface
+   //  Draw scene: All cars and surface
 
    //Red car
    car(-2,-0.07,-0.8, 0.5,0.5,0.5, 0, 1,0,0);
@@ -754,14 +749,14 @@ void display()
 
    //Parking surface
    glColor3f(0.4, 0.4, 0.4);
-   cube(0,-0.24,0, 4,0.1,4, 0, 0);
+   cube(0,-0.24,0, 4,0.1,4, 0);
 
    //World edges
    glColor3f(0, 0.3, 0.1);
-   cube(4.2,-0.24,0, 0.2,0.2,4.4, 0, 0);
-   cube(-4.2,-0.24,0, 0.2,0.2,4.4, 0, 0);
-   cube(0,-0.24,4.2, 0.2,0.2,4, 90, 0);
-   cube(0,-0.24,-4.2, 0.2,0.2,4, 90, 0);
+   cube(4.2,-0.12,0, 0.2,0.2,4, 0);
+   cube(-4.2,-0.12,0, 0.2,0.2,4, 0);
+   cube(0,-0.12,4.2, 0.2,0.2,4, 90);
+   cube(0,-0.12,-4.2, 0.2,0.2,4, 90);
 
    //  Draw axes - no lighting from here on
    glDisable(GL_LIGHTING);

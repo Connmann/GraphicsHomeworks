@@ -1,11 +1,7 @@
-ex13: Lighting
+#Homework 5 - Lighting
+##Connor Guerin
 
-Willem A. (Vlakkies) Schreuder
-CSCI4229/5229 Fall 2019
-
-Demonstrates basic lighting using a sphere and a cube.
-
-Key bindings
+##Key bindings (Same as Example 13)
   l          Toggles lighting
   a/A        Decrease/increase ambient light
   d/D        Decrease/increase diffuse light
@@ -26,3 +22,5 @@ Key bindings
   PgDn/PgUp  Zoom in and out
   0          Reset view angle
   ESC        Exit
+
+  This assignment took about 7 hours to complete.
