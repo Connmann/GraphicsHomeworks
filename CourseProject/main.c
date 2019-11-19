@@ -33,7 +33,7 @@ int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 int light=1;      //  Lighting
-double asp=1;     //  Aspect ratio
+double asp=1.333;     //  Aspect ratio
 double dim=6.0;   //  Size of world
 
 // Light values
@@ -51,6 +51,13 @@ float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
 float ylight  = 1.5;  // Elevation of light
 
+double fpMoveInc = 0.02; //Multiplier for how much to move each keystroke in FP mode
+
+//First person camera location
+double fpX = 0;
+double fpY = 0.7;
+double fpZ = 0;
+
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 5;
 double refY = 0;
@@ -59,6 +66,7 @@ double refZ = 0;
 //Texture Variables
 int tMode = 0;
 float texScale = 0.5;
+
 
 /*
  *  Draw a cube
@@ -769,11 +777,13 @@ void display()
       double Ez = +2*dim*Cos(th)*Cos(ph);
       gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
    }
-   //  Orthogonal - set world orientation
+   //  First Person
    else
    {
-      glRotatef(ph,1,0,0);
-      glRotatef(th,0,1,0);
+      refX = (dim * Sin(th)) + fpX;
+      refY = (dim * Sin(ph));
+      refZ = (dim * -Cos(th)) + fpZ;
+      gluLookAt(fpX,fpY,fpZ, refX,refY,refZ, 0,1,0);
    }
 
    //  Flat or smooth shading
@@ -945,7 +955,7 @@ void display()
    //  Display parameters
    glWindowPos2i(5,5);
    Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
-     th,ph,dim,fov,mode?"Perpective":"Orthogonal",light?"On":"Off");
+     th,ph,dim,fov,mode?"Perpective":"FP",light?"On":"Off");
    if (light)
    {
       glWindowPos2i(5,45);
@@ -1013,7 +1023,7 @@ void special(int key,int x,int y)
    th %= 360;
    ph %= 360;
    //  Update projection
-   Project(mode?fov:0,asp,dim);
+   Project(fov,asp,dim);
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -1056,35 +1066,52 @@ void key(unsigned char ch,int x,int y)
       ylight -= 0.1;
    else if (ch==']')
       ylight += 0.1;
+   //First Person Controls
+   else if (ch == 'w' || ch == 'W') {
+      fpX += fpMoveInc * refX;
+      fpZ += fpMoveInc * refZ;
+   }
+   else if (ch == 's' || ch == 'S') {
+      fpX -= fpMoveInc * refX;
+      fpZ -= fpMoveInc * refZ;
+   }
+   else if (ch == 'd' || ch == 'D') {
+      fpX += fpMoveInc * -refZ;
+      fpZ += fpMoveInc * refX;
+   }
+   else if (ch == 'a' || ch == 'A') {
+      fpX += fpMoveInc * refZ;
+      fpZ += fpMoveInc * -refX;
+   }
    //  Ambient level
-   else if (ch=='a' && ambient>0)
-      ambient -= 5;
-   else if (ch=='A' && ambient<100)
-      ambient += 5;
-   //  Diffuse level
-   else if (ch=='d' && diffuse>0)
-      diffuse -= 5;
-   else if (ch=='D' && diffuse<100)
-      diffuse += 5;
-   //  Specular level
-   else if (ch=='s' && specular>0)
-      specular -= 5;
-   else if (ch=='S' && specular<100)
-      specular += 5;
-   //  Emission level
-   else if (ch=='e' && emission>0)
-      emission -= 5;
-   else if (ch=='E' && emission<100)
-      emission += 5;
-   //  Shininess level
-   else if (ch=='n' && shininess>-1)
-      shininess -= 1;
-   else if (ch=='N' && shininess<7)
-      shininess += 1;
+   // else if (ch=='a' && ambient>0)
+   //    ambient -= 5;
+   // else if (ch=='A' && ambient<100)
+   //    ambient += 5;
+   // //  Diffuse level
+   // else if (ch=='d' && diffuse>0)
+   //    diffuse -= 5;
+   // else if (ch=='D' && diffuse<100)
+   //    diffuse += 5;
+   // //  Specular level
+   // else if (ch=='s' && specular>0)
+   //    specular -= 5;
+   // else if (ch=='S' && specular<100)
+   //    specular += 5;
+   // //  Emission level
+   // else if (ch=='e' && emission>0)
+   //    emission -= 5;
+   // else if (ch=='E' && emission<100)
+   //    emission += 5;
+   // //  Shininess level
+   // else if (ch=='n' && shininess>-1)
+   //    shininess -= 1;
+   // else if (ch=='N' && shininess<7)
+   //    shininess += 1;
    //  Translate shininess power to value (-1 => 0)
    shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
-   Project(mode?fov:0,asp,dim);
+   Project(fov,asp,dim);
    //  Animate if requested
    glutIdleFunc(move?idle:NULL);
    //  Tell GLUT it is necessary to redisplay the scene
@@ -1101,7 +1128,7 @@ void reshape(int width,int height)
    //  Set the viewport to the entire window
    glViewport(0,0, width,height);
    //  Set projection
-   Project(mode?fov:0,asp,dim);
+   Project(fov,asp,dim);
 }
 
 /*
