@@ -1,12 +1,10 @@
 /*
- *  Course Project
+ *  Final Course Project
  *  Connor Guerin
  *
  *  Key bindings:
  *  l          Toggles lighting
- *  a/A        Decrease/increase ambient light
- *  d/D        Decrease/increase diffuse light
- *  s/S        Decrease/increase specular light
+ *  w/a/s/d    Move the camera (in first person mode)
  *  e/E        Decrease/increase emitted light
  *  n/N        Decrease/increase shininess
  *  F1         Toggle smooth/flat shading
@@ -16,25 +14,25 @@
  *  F9         Invert bottom normal
  *  m          Toggles light movement
  *  []         Lower/rise light
- *  p          Toggles ortogonal/perspective projection
+ *  p          Toggles first person/perspective projection
  *  +/-        Change field of view of perspective
  *  x          Toggle axes
  *  arrows     Change view angle
- *  PgDn/PgUp  Zoom in and out
+ *  PgDn/PgUp  Zoom in and out (in perspective view)
  *  0          Reset view angle
  *  ESC        Exit
  */
 #include "CSCIx229.h"
 
 int axes=1;       //  Display axes
-int mode=1;       //  Projection mode
+int mode=0;       //  Projection mode
 int move=1;       //  Move light
 int th=0;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 int light=1;      //  Lighting
 double asp=1.333;     //  Aspect ratio
-double dim=6.0;   //  Size of world
+double dim=8.0;   //  Size of world
 
 // Light values
 int one       =   1;  // Unit value
@@ -49,7 +47,7 @@ int specular  =   0;  // Specular intensity (%)
 int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
-float ylight  = 1.5;  // Elevation of light
+float ylight  = 3;  // Elevation of light
 
 double fpMoveInc = 0.02; //Multiplier for how much to move each keystroke in FP mode
 
@@ -751,6 +749,144 @@ static void car(double x,double y,double z,
    glPopMatrix();
 }
 
+static void workshop(double x, double z, double th)
+{
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,0,z);
+   glRotated(th,0,1,0);
+
+   //Building - Brown Workshop
+   // glColor3f(0.7, 0.7, 0.7);
+   // glBindTexture(GL_TEXTURE_2D,LoadTexBMP("brown-brick.bmp"));
+   texScale = 0.5;
+   cube(0,1.6,0, 2,0.4,1, 0); //Top
+   cube(-1.75,0.65,0, 0.25,0.55,1, 0); //Left
+   cube(1.75,0.65,0, 0.25,0.55,1, 0); //Right
+   cube(0,0.65,0, 0.2,0.55,1, 0); //Middle
+
+   //"Floor" for brown workshop
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("sidewalk.bmp"));
+   texScale = 1;
+   cube(0,-0.05,0.9, 2,0.15,0.1, 0);
+   
+   //Garage Doors
+   glColor3f(0.5, 0.5, 0.5);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("garage-door.bmp"));
+   glBegin(GL_QUADS);
+   float texRepX = 1.0;
+   float texRepY = 1.0;
+   //Left
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(0.0,0.0); glVertex3f(-1.5, 0.1, 0.9);
+   glTexCoord2f(texRepX,0.0); glVertex3f(-0.2, 0.1, 0.9);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(-0.2, 1.2, 0.9);
+   glTexCoord2f(0.0,texRepY); glVertex3f(-1.5, 1.2, 0.9);
+   //Right
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.2, 0.1, 0.9);
+   glTexCoord2f(texRepX,0.0); glVertex3f(1.5, 0.1, 0.9);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(1.5, 1.2, 0.9);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.2, 1.2, 0.9);
+   glEnd();
+
+   //Undo transformations
+   glPopMatrix();
+}
+
+static void greyHouse(double x, double z, double th) {
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,0,z);
+   glRotated(th,0,1,0);
+
+   glPolygonOffset(1,1);
+   glEnable(GL_POLYGON_OFFSET_FILL);
+
+   //Walkway (to house)
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("walkway.bmp"));
+   texScale = 0.4;
+   cube(0,-0.05,-1.5, 0.5,0.15,0.4, 90); // Between hedges
+
+   //Hedges
+   glColor3f(0, 0.3, 0.1);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("hedge.bmp"));
+   texScale = 0.25;
+   cube(1.23,0.3,-1.2, 0.17,0.2,0.77, 90);
+   cube(-1.23,0.3,-1.2, 0.17,0.2,0.77, 90);
+
+   //Grass
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grass.bmp"));
+   texScale = 0.5;
+   cube(-1.2,-0.05,-1.5, 0.8,0.15,0.5, 0);
+   cube(1.2,-0.05,-1.5, 0.8,0.15,0.5, 0);
+
+   //Building - Grey House
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grey-brick.bmp"));
+   texScale = 0.5;
+   cube(0,0.9,-3, 2,0.8,1, 0);
+
+   //Door Frame
+   glColor3f(0.5, 0.5, 0.5);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("wood-beam.bmp"));
+   texScale = 0.5;
+   cube(-0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
+   cube(0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
+   cube(0,1.25,-1.95, 0.5,0.05,0.05, 0);
+
+   //Window Sills
+   cube(-1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Left
+   cube(1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Right
+
+   glDisable(GL_POLYGON_OFFSET_FILL);
+
+   //Door
+   glColor3f(0.5, 0.5, 0.5);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("front-door-1.bmp"));
+   glBegin(GL_QUADS);
+   double texRepX = 1.0;
+   double texRepY = 1.0;
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.3, 0.2, -2);
+   glTexCoord2f(texRepX,0.0); glVertex3f(0.3, 0.2, -2);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.3, 1.2, -2);
+   glTexCoord2f(0.0,texRepY); glVertex3f(-0.3, 1.2, -2);
+   glEnd();
+
+   //Windows
+   glColor3f(0.7, 0.7, 0.7);
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("window-1.bmp"));
+   glBegin(GL_QUADS);
+   texRepX = 1.0;
+   texRepY = 2.0;
+
+   //Left Window
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(0.0,0.0); glVertex3f(-1.7, 0.7, -2);
+   glTexCoord2f(texRepX,0.0); glVertex3f(-0.9, 0.7, -2);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(-0.9, 1.3, -2);
+   glTexCoord2f(0.0,texRepY); glVertex3f(-1.7, 1.3, -2);
+
+   //Right Window
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.9, 0.7, -2);
+   glTexCoord2f(texRepX,0.0); glVertex3f(1.7, 0.7, -2);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(1.7, 1.3, -2);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.9, 1.3, -2);
+
+   glEnd();
+
+   //Undo transformations
+   glPopMatrix();
+}
+
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
@@ -828,7 +964,69 @@ void display()
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
 
+   //Inital values for texture repitition
+   double texRepX = 1.0;
+   double texRepY = 1.0;
+
    //Draw scene
+
+   glDisable(GL_POLYGON_OFFSET_FILL);
+   //Skybox
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-front.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(+16,-16, 16);
+   glTexCoord2f(0.0,0.0); glVertex3f(-16,-16, 16);
+   glTexCoord2f(0.0,1.0); glVertex3f(-16,+16, 16);
+   glTexCoord2f(1.0,1.0); glVertex3f(+16,+16, 16);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-back.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(-16,-16, -16);
+   glTexCoord2f(0.0,0.0); glVertex3f(+16,-16, -16);
+   glTexCoord2f(0.0,1.0); glVertex3f(+16,+16, -16);
+   glTexCoord2f(1.0,1.0); glVertex3f(-16,+16, -16);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-right.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(16,-16, -16);
+   glTexCoord2f(0.0,0.0); glVertex3f(16,-16, +16);
+   glTexCoord2f(0.0,1.0); glVertex3f(16,+16, +16);
+   glTexCoord2f(1.0,1.0); glVertex3f(16,+16, -16);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-left.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(-16,-16, +16);
+   glTexCoord2f(0.0,0.0); glVertex3f(-16,-16, -16);
+   glTexCoord2f(0.0,1.0); glVertex3f(-16,+16, -16);
+   glTexCoord2f(1.0,1.0); glVertex3f(-16,+16, +16);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-top.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(+16,16, +16);
+   glTexCoord2f(0.0,0.0); glVertex3f(-16,16, +16);
+   glTexCoord2f(0.0,1.0); glVertex3f(-16,16, -16);
+   glTexCoord2f(1.0,1.0); glVertex3f(+16,16, -16);
+   glEnd();
 
    //Enable offset for windows, doors, and other decals
    glPolygonOffset(1,1);
@@ -837,94 +1035,149 @@ void display()
    //Blue car
    car(-1,0.12,0.8, 1,1,1, 0, 0,0,0.8);
 
-   //Street surface
+   //Red car
+   car(3,0.12,0.8, 1,1,1, 0, 0.8,0,0);
+
+   //Street surface - Main Street
    glColor3f(0.4, 0.4, 0.4);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("asphalt.bmp"));
    texScale = 0.5;
-   cube(0,-0.1,1, 2,0.1,1, 0);
-   cube(-4,-0.1,1, 2,0.1,1, 0);
-   cube(4,-0.1,1, 2,0.1,1, 0);
+   float xPos = -6;
+   for(int i = 0; i < 7; i++){
+      cube(xPos,-0.1,0.75, 1,0.1,0.75, 0);
+      cube(xPos,-0.1,2.25, 1,0.1,0.75, 0);
+      xPos += 2;
+   }
 
-   //Sidewalks
-   glColor3f(0.7, 0.7, 0.7);
+   //Street Surface - Side Streets
+   glColor3f(0.4, 0.4, 0.4);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("asphalt.bmp"));
+   texScale = 0.5;
+   float yPos = -3.5;
+   for(int i = 0; i < 6; i++){
+      cube(-7.75,-0.1,yPos, 1,0.1,0.75, 90);
+      cube(-9.25,-0.1,yPos, 1,0.1,0.75, 90);
+      cube(7.75,-0.1,yPos, 1,0.1,0.75, 90);
+      cube(9.25,-0.1,yPos, 1,0.1,0.75, 90);
+      yPos += 2;
+   }
+
+   //Sidewalks (Player Side)
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("sidewalk.bmp"));
    texScale = 0.5;
    cube(0,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
    cube(-4,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
    cube(4,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
-   cube(0,-0.05,-1.5, 0.5,0.15,0.4, 90); // Between hedges
 
-   //Hedges
-   glColor3f(0, 0.3, 0.1);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("hedge.bmp"));
-   texScale = 0.25;
-   cube(1.2,0.3,-1.2, 0.2,0.2,0.8, 90);
-   cube(-1.2,0.3,-1.2, 0.2,0.2,0.8, 90);
+   //Sidewalks (Far Side)
+   cube(0,-0.05,3.5, 2,0.15,0.5, 0); // Along Street
+   cube(-4,-0.05,3.5, 2,0.15,0.5, 0); // Along Street
+   cube(4,-0.05,3.5, 2,0.15,0.5, 0); // Along Street
 
-   //Grass
+   //Sidewalks (Ends)
+   //Near
+   cube(-6.5,-0.05,5, 2,0.15,0.5, 90); // Far side
+   cube(6.5,-0.05,5, 2,0.15,0.5, 90); // Far side
+   cube(-6.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
+   cube(6.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
+   //Far
+   cube(-10.5,-0.05,5, 2,0.15,0.5, 90); // Far side
+   cube(10.5,-0.05,5, 2,0.15,0.5, 90); // Far side
+
+   cube(-10.5,-0.05,1.5, 1.5,0.15,0.5, 90); // Middle
+   cube(10.5,-0.05,1.5, 1.5,0.15,0.5, 90); // Middle
+
+   cube(-10.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
+   cube(10.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
+
+
+   //Grey town house - player side
+   greyHouse(0,0,0);
+
+   //Brown workshop - player side
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("brown-brick.bmp"));
+   workshop(-4,-2,0);
+
+   //Storage Facility
+   glColor3f(0.33, 0.22, 0.11);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("white-brick.bmp"));
+   workshop(4,5,180);
+   glColor3f(0.33, 0.22, 0.11);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("white-brick.bmp"));
+   workshop(0,5,180);
+
+   //Triagular Roof
+   texRepX = 2/texScale;
+   texRepY = 0.7/texScale;
+   float xVal = 6;
+   for(int i = 0; i < 4; i++){
+      texRepX = 2/texScale;
+      texRepY = 0.7/texScale;
+      glColor3f(0.33, 0.22, 0.11);
+      //Side
+      glBindTexture(GL_TEXTURE_2D,LoadTexBMP("white-brick.bmp"));
+      glBegin(GL_TRIANGLES);
+      glNormal3f(0,0,-1);
+      glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,4);
+      glTexCoord2f(texRepX, 0.0); glVertex3f(xVal-2,2,4);
+      glTexCoord2f(texRepX, texRepY); glVertex3f(xVal-2,2.7,4);
+      glEnd();
+
+      texRepX = 4/texScale;
+      texRepY = 2/texScale;
+      glColor3f(0.5, 0.5, 0.5);
+      //Roof
+      glBindTexture(GL_TEXTURE_2D,LoadTexBMP("metal-roof.bmp"));
+      glBegin(GL_QUADS);
+      glNormal3f(-0.33035, 0.943858, 0);
+      glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,4);
+      glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,4);
+      glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,6);
+      glTexCoord2f(0.0,texRepY); glVertex3f(xVal,2,6);
+      glEnd();
+
+      texRepX = 1;
+      texRepY = 3;
+      glColor3f(0.5, 0.5, 0.5);
+      //Windows
+      glBindTexture(GL_TEXTURE_2D,LoadTexBMP("warehouse-window.bmp"));
+      glBegin(GL_QUADS);
+      glNormal3f(-1, 0, 0);
+      glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,4);
+      glTexCoord2f(0.0,0.0); glVertex3f(xVal-2,2,4);
+      glTexCoord2f(0.0,texRepY); glVertex3f(xVal-2,2,6);
+      glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,6);
+      glEnd();
+
+      xVal -= 2;
+   }
+   
+
+
+   //Grass Square
    glColor3f(0.7, 0.7, 0.7);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grass.bmp"));
    texScale = 0.5;
-   cube(-1.2,-0.05,-1.5, 0.8,0.15,0.5, 0);
-   cube(1.2,-0.05,-1.5, 0.8,0.15,0.5, 0);
+   cube(4,-0.05,-3, 2,0.15,2, 0);
 
-   //Building
-   glColor3f(0.7, 0.7, 0.7);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grey-brick.bmp"));
+   //Fence
+   glColor3f(0.4, 0.4, 0.4);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("wood-fence.bmp"));
    texScale = 0.5;
-   cube(0,0.9,-3, 2,0.8,1, 0);
+   cube(2.05,0.6,-3, 0.05,0.5,2, 0); //Left
+   cube(5.95,0.6,-3, 0.05,0.5,2, 0); //Right
+   cube(2.8,0.6,-1.05, 0.05,0.5,0.7, 90); //Front Left
+   cube(5.2,0.6,-1.05, 0.05,0.5,0.7, 90); //Front Right
 
-   //Door Frame
-   glColor3f(0.5, 0.5, 0.5);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("wood-beam.bmp"));
+   //Conder block wall - Far Side
+   glColor3f(0.4, 0.4, 0.4);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("cinder-block.bmp"));
    texScale = 0.5;
-   cube(-0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
-   cube(0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
-   cube(0,1.25,-1.95, 0.5,0.05,0.05, 0);
+   cube(-4,0.6,4.05, 2,0.5,0.05, 0); //Left
 
-   //Window Sills
-   cube(-1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Left
-   cube(1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Right
-
-
-   glDisable(GL_POLYGON_OFFSET_FILL);
-
-   //Door
-   glColor3f(0.5, 0.5, 0.5);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("front-door-1.bmp"));
-   glBegin(GL_QUADS);
-   float texRepX = 1.0;
-   float texRepY = 1.0;
-   glNormal3f(0, 0, 1);
-   glTexCoord2f(0.0,0.0); glVertex3f(-0.3, 0.2, -2);
-   glTexCoord2f(texRepX,0.0); glVertex3f(0.3, 0.2, -2);
-   glTexCoord2f(texRepX,texRepY); glVertex3f(0.3, 1.2, -2);
-   glTexCoord2f(0.0,texRepY); glVertex3f(-0.3, 1.2, -2);
-   glEnd();
-
-   //Windows
-   glColor3f(0.7, 0.7, 0.7);
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("window-1.bmp"));
-   glBegin(GL_QUADS);
-   texRepX = 1.0;
-   texRepY = 2.0;
-
-   //Left Window
-   glNormal3f(0, 0, 1);
-   glTexCoord2f(0.0,0.0); glVertex3f(-1.7, 0.7, -2);
-   glTexCoord2f(texRepX,0.0); glVertex3f(-0.9, 0.7, -2);
-   glTexCoord2f(texRepX,texRepY); glVertex3f(-0.9, 1.3, -2);
-   glTexCoord2f(0.0,texRepY); glVertex3f(-1.7, 1.3, -2);
-
-   //Right Window
-   glNormal3f(0, 0, 1);
-   glTexCoord2f(0.0,0.0); glVertex3f(0.9, 0.7, -2);
-   glTexCoord2f(texRepX,0.0); glVertex3f(1.7, 0.7, -2);
-   glTexCoord2f(texRepX,texRepY); glVertex3f(1.7, 1.3, -2);
-   glTexCoord2f(0.0,texRepY); glVertex3f(0.9, 1.3, -2);
-
-   glEnd();
+   
 
 
    //  Draw axes - no lighting from here on

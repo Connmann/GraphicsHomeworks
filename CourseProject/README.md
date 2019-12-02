@@ -1,26 +1,24 @@
-#Homework 6 - Textures
+#Final Project
 ##Connor Guerin
 
-##Key bindings (Same as Example 13)
-  l          Toggles lighting
-  a/A        Decrease/increase ambient light
-  d/D        Decrease/increase diffuse light
-  s/S        Decrease/increase specular light
-  e/E        Decrease/increase emitted light
-  n/N        Decrease/increase shininess
-  F1         Toggle smooth/flat shading
-  F2         Toggle local viewer mode
-  F3         Toggle light distance (1/5)
-  F8         Change ball increment
-  F9         Invert bottom normal
-  m          Toggles light movement
-  []         Lower/rise light
-  p          Toggles ortogonal/perspective projection
-  +/-        Change field of view of perspective
-  x          Toggle axes
-  arrows     Change view angle
-  PgDn/PgUp  Zoom in and out
-  0          Reset view angle
-  ESC        Exit
+##Key Bindings
+l          Toggles lighting
+w/a/s/d    Move the camera (in first person mode)
+e/E        Decrease/increase emitted light
+n/N        Decrease/increase shininess
+F1         Toggle smooth/flat shading
+F2         Toggle local viewer mode
+F3         Toggle light distance (1/5)
+F8         Change ball increment
+F9         Invert bottom normal
+m          Toggles light movement
+[]         Lower/rise light
+p          Toggles first person/perspective projection
++/-        Change field of view of perspective
+x          Toggle axes
+arrows     Change view angle
+PgDn/PgUp  Zoom in and out (in perspective view)
+0          Reset view angle
+ESC        Exit
 
-  This assignment took about 5 hours to complete.
+In the final version of this project the camera will be locked in first person and player movement will be restricted to the sidewalk.
