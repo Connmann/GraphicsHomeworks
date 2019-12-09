@@ -81,11 +81,11 @@ static void cube(double x,double y,double z,
                  double th)
 {
    //  Set specular color to white
-   float white[] = {1,1,1,1};
-   float black[] = {0,0,0,1};
-   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   // float white[] = {1,1,1,1};
+   // float black[] = {0,0,0,1};
+   // glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   // glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   // glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    //  Save transformation
    glPushMatrix();
    //  Offset, scale and rotate
@@ -534,6 +534,10 @@ static void bumper(double x,double y,double z,
 
    glEnable(GL_POLYGON_OFFSET_FILL);
 
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
    //Undo transformations
    glPopMatrix();  
 }
@@ -628,26 +632,6 @@ static void policeCar(double x,double y,double z,
    glEnd();
 
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));
-   //Light bar
-   glColor3f(0.8, 0, 0);
-   cube(-0.2,0.42,-0.15, 0.07,0.02,0.1, 0);
-   glColor3f(0, 0, 0.8);
-   cube(-0.2,0.42,0.15, 0.07,0.02,0.1, 0);
-   glColor3f(0.1, 0.1, 0.1);
-   cube(-0.2,0.42,0, 0.07,0.02,0.05, 0);
-
-   // //Trunk
-   // texRepX = dx/texScale;
-   // texRepY = dz/texScale;
-   // glBegin(GL_QUADS);
-   // glNormal3f(0,1,0);
-   // glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.25, -0.35);
-   // glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.25, 0.35);
-   // glTexCoord2f(texRepX,texRepY); glVertex3f(-0.6, 0.25, 0.35);
-   // glTexCoord2f(0.0,texRepY); glVertex3f(-0.6, 0.25, -0.35);
-   // glEnd();
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));
 
    glColor3f(0.8, 0.8, 1);
 
@@ -696,6 +680,70 @@ static void policeCar(double x,double y,double z,
    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.6,0.25,-0.35);
    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.8,0.25,-0.35);
    glEnd();
+
+   int t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+
+   //Light bar
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));
+   //Mid section
+   glColor3f(0.1, 0.1, 0.1);
+   cube(-0.2,0.42,0, 0.07,0.02,0.05, 0);
+
+   //  Enable light 1 - Police Light
+   glEnable(GL_LIGHT1);
+   
+   if (t % 2 == 0) {
+      float dif[4] = {0.8,0,0,1};
+      float spec[4] = {0,0,0,1};
+      float pos[4] = {-0.2,0.26,-0.15,1.0};
+      //Red Light
+      glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
+      glLightfv(GL_LIGHT0,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT0,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT0,GL_POSITION,pos);
+
+      //Red Light
+      float redEm[4] = {0.8, 0, 0, 1.0};
+      glMaterialf(GL_FRONT,GL_SHININESS,0);
+      glMaterialfv(GL_FRONT,GL_SPECULAR,redEm);
+      glMaterialfv(GL_FRONT,GL_EMISSION,redEm);
+      glColor3f(0.5, 0, 0);
+      cube(-0.2,0.42,-0.15, 0.07,0.02,0.1, 0);
+      //Blue Light
+      glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+      glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+      glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+      glColor3f(0, 0, 0.5);
+      cube(-0.2,0.42,0.15, 0.07,0.02,0.1, 0);
+   } else {
+      float dif[4] = {0,0,0.8,1};
+      float spec[4] = {0,0,0,1};
+      float pos[4] = {-0.2,0.26,0.15,1.0};
+      //Blue Light
+      glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
+      glLightfv(GL_LIGHT0,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT0,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT0,GL_POSITION,pos);
+
+      //Red Light
+      glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+      glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+      glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+      glColor3f(0.5, 0, 0);
+      cube(-0.2,0.42,-0.15, 0.07,0.02,0.1, 0);
+      //Blue Light
+      float blueEm[4] = {0, 0, 0.8, 1.0};
+      glMaterialf(GL_FRONT,GL_SHININESS,0);
+      glMaterialfv(GL_FRONT,GL_SPECULAR,blueEm);
+      glMaterialfv(GL_FRONT,GL_EMISSION,blueEm);
+      glColor3f(0, 0, 0.5);
+      cube(-0.2,0.42,0.15, 0.07,0.02,0.1, 0);
+   }
+
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
 
    //Undo transformations
    glPopMatrix();
@@ -1213,7 +1261,7 @@ void display()
    glEnable(GL_POLYGON_OFFSET_FILL);
 
    //Police Car
-   policeCar(2,0.12,1.2, 1,1,1, 45);
+   policeCar(3,0.12,1.2, 1,1,1, 30);
 
    // //Blue car
    // car(-1,0.12,0.8, 1,1,1, 0, 0,0,0.8);
@@ -1418,15 +1466,8 @@ void display()
    glutSwapBuffers();
 }
 
-/*
- *  GLUT calls this routine when the window is resized
- */
-void idle()
+static void setEnvLighting()
 {
-   //  Elapsed time in seconds
-   double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-   zh = fmod(15*t,360.0);
-
    float ambScale = 0.8;
 
    if(Sin(zh) >= 0.2) {
@@ -1462,7 +1503,18 @@ void idle()
       Diffuse[1] = 0;
       Diffuse[2] = 0;
    }
+}
 
+/*
+ *  GLUT calls this routine when the window is resized
+ */
+void idle()
+{
+   //  Elapsed time in seconds
+   double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+   zh = fmod(15*t,360.0);
+
+   setEnvLighting();
 
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
