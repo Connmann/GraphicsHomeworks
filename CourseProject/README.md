@@ -1,6 +1,13 @@
 #Final Project
 ##Connor Guerin
 
+##What Remains
+ * In the final version of this project the camera will be locked in first person and player movement will be restricted to the sidewalk.
+ * Add a police car on the street with flashing red/blue lights
+ * Add day/night cycle (changing ambient light)
+ * Add basic buildings and fencing to the far edges of the word, to make it seem more "immersive"
+ * Chase down an inconsistent seg fault, likely related to the first person camera movement.
+
 ##Key Bindings
 l          Toggles lighting
 w/a/s/d    Move the camera (in first person mode)
@@ -21,4 +28,3 @@ PgDn/PgUp  Zoom in and out (in perspective view)
 0          Reset view angle
 ESC        Exit
 
-In the final version of this project the camera will be locked in first person and player movement will be restricted to the sidewalk.

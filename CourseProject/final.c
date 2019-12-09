@@ -36,7 +36,7 @@ double dim=8.0;   //  Size of world
 
 // Light values
 int one       =   1;  // Unit value
-int distance  =   5;  // Light distance
+int distance  =   30;  // Light distance
 int inc       =  10;  // Ball increment
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
@@ -47,7 +47,7 @@ int specular  =   0;  // Specular intensity (%)
 int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
-float ylight  = 3;  // Elevation of light
+float ylight  = 13;  // Elevation of light
 
 double fpMoveInc = 0.02; //Multiplier for how much to move each keystroke in FP mode
 
@@ -65,6 +65,10 @@ double refZ = 0;
 int tMode = 0;
 float texScale = 0.5;
 
+//Light Vecotrs
+float Ambient[]   = {0.01*80 ,0.01*80 ,0.01*80 ,1.0};
+float Diffuse[]   = {1.0,1.0,1.0,1.0};
+float Specular[]  = {0.01*0,0.01*0,0.01*0,1.0};
 
 /*
  *  Draw a cube
@@ -534,6 +538,169 @@ static void bumper(double x,double y,double z,
    glPopMatrix();  
 }
 
+static void policeCar(double x,double y,double z,
+                     double dx,double dy,double dz,
+                     double th)
+{
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+   float cr = 0.1;
+   float cb = 0.1;
+   float cg = 0.1;
+
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,y,z);
+   glRotated(th,0,1,0);
+   glScaled(dx,dy,dz);
+
+   glPolygonOffset(1,1);
+
+   wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
+   wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
+   wheel(0.6,0,-0.4, 1,1,1, 0, 8, 10);
+   wheel(-0.6,0,0.4, 1,1,1, 0, 8, 10);
+
+   glColor3f(cr, cb, cg);
+
+   //Lower Body
+   body(0,0.1,0, 0.8,0.1,0.4, 0, 0);
+   //Cabin
+   glColor3f(cr, cb, cg);
+   body(0,0.3,0, 0.2,0.1,0.35, 0, 1);
+   glColor3f(cr, cb, cg);
+   body(-0.4,0.3,0, 0.2,0.1,0.35, 0, 1);
+
+   texScale = 1.0;
+
+   glColor3f(cr, cb, cg);
+
+   //Front Bumper
+   bumper(0.8,0,0, 1,1,1, 0, 1);
+
+   glColor3f(cr, cb, cg);
+
+   //Rear Bumper
+   bumper(-0.8,0,0, 1,1,1, 180, 0);
+
+   //  Set specular color to white
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
+   glEnable(GL_POLYGON_OFFSET_FILL);
+
+   glColor3f(cr, cb, cg);
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("basic-metal.bmp"));
+
+   //Texture repitition values
+   float texRepX = 1.0;
+   float texRepY = 1.0;
+
+   //Hood and upper side pannels
+   texRepX = dx/texScale;
+   texRepY = dz/texScale;
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0.707107, 0.707107);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.25, 0.35);
+   glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.2, 0.4);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.2, 0.4);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.8, 0.25, 0.35);
+
+   glNormal3f(0, 1, 0);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.4, 0.25, 0.35);
+   glTexCoord2f(texRepX,0.0); glVertex3f(0.8, 0.25, 0.35);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.25, -0.35);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.4, 0.25, -0.35);
+   
+   glNormal3f(0, 0.707107, -0.707107);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.2, -0.4);
+   glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.25, -0.35);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.25, -0.35);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.8, 0.2, -0.4);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));
+   //Light bar
+   glColor3f(0.8, 0, 0);
+   cube(-0.2,0.42,-0.15, 0.07,0.02,0.1, 0);
+   glColor3f(0, 0, 0.8);
+   cube(-0.2,0.42,0.15, 0.07,0.02,0.1, 0);
+   glColor3f(0.1, 0.1, 0.1);
+   cube(-0.2,0.42,0, 0.07,0.02,0.05, 0);
+
+   // //Trunk
+   // texRepX = dx/texScale;
+   // texRepY = dz/texScale;
+   // glBegin(GL_QUADS);
+   // glNormal3f(0,1,0);
+   // glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.25, -0.35);
+   // glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.25, 0.35);
+   // glTexCoord2f(texRepX,texRepY); glVertex3f(-0.6, 0.25, 0.35);
+   // glTexCoord2f(0.0,texRepY); glVertex3f(-0.6, 0.25, -0.35);
+   // glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));
+
+   glColor3f(0.8, 0.8, 1);
+
+   //Windshield
+   texRepX = 1.0;
+   texRepY = 1.0;
+   glBegin(GL_QUADS);
+   glNormal3f(0.6, 0.8, 0);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.4,0.25,0.35);
+   glTexCoord2f(texRepX,0.0); glVertex3f(0.4,0.25,-0.35);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.2,0.4,-0.35);
+   glTexCoord2f(0.0,texRepY); glVertex3f(0.2,0.4,0.35);
+   glEnd();
+
+   glBegin(GL_TRIANGLES);
+   glNormal3f(0,0,1);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.2,0.4,0.35);
+   glTexCoord2f(texRepX, 0.0); glVertex3f(0.2,0.25,0.35);
+   glTexCoord2f(texRepX, texRepY); glVertex3f(0.4,0.25,0.35);
+
+   glNormal3f(0,0,-1);
+   glTexCoord2f(0.0,0.0); glVertex3f(0.4,0.25,-0.35);
+   glTexCoord2f(texRepX, 0.0); glVertex3f(0.2,0.25,-0.35);
+   glTexCoord2f(texRepX, texRepY); glVertex3f(0.2,0.4,-0.35);
+   glEnd();
+
+   //Rear Window
+   texRepX = 1.0;
+   texRepY = 1.0;
+   glBegin(GL_QUADS);
+   glNormal3f(-0.6, 0.8, 0);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.8,0.25,-0.35);
+   glTexCoord2f(texRepX,0.0); glVertex3f(-0.8,0.25,0.35);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(-0.6,0.4,0.35);
+   glTexCoord2f(0.0,texRepY); glVertex3f(-0.6,0.4,-0.35);
+   glEnd();
+
+   glBegin(GL_TRIANGLES);
+   glNormal3f(0,0,1);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.8,0.25,0.35);
+   glTexCoord2f(texRepX, 0.0); glVertex3f(-0.6,0.25,0.35);
+   glTexCoord2f(texRepX, texRepY); glVertex3f(-0.6,0.4,0.35);
+   
+   glNormal3f(0,0,-1);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.6,0.4,-0.35);
+   glTexCoord2f(texRepX, 0.0); glVertex3f(-0.6,0.25,-0.35);
+   glTexCoord2f(texRepX, texRepY); glVertex3f(-0.8,0.25,-0.35);
+   glEnd();
+
+   //Undo transformations
+   glPopMatrix();
+}
+
 static void car(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th,
@@ -887,6 +1054,73 @@ static void greyHouse(double x, double z, double th) {
    glPopMatrix();
 }
 
+static void skybox(float dim) {
+   glDisable(GL_POLYGON_OFFSET_FILL);
+
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,black);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-front.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, -1);
+   glTexCoord2f(1.0,0.0); glVertex3f(+dim,-dim, dim);
+   glTexCoord2f(0.0,0.0); glVertex3f(-dim,-dim, dim);
+   glTexCoord2f(0.0,1.0); glVertex3f(-dim,+dim, dim);
+   glTexCoord2f(1.0,1.0); glVertex3f(+dim,+dim, dim);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-back.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, 1);
+   glTexCoord2f(1.0,0.0); glVertex3f(-dim,-dim, -dim);
+   glTexCoord2f(0.0,0.0); glVertex3f(+dim,-dim, -dim);
+   glTexCoord2f(0.0,1.0); glVertex3f(+dim,+dim, -dim);
+   glTexCoord2f(1.0,1.0); glVertex3f(-dim,+dim, -dim);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-right.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(-1, 0, 0);
+   glTexCoord2f(1.0,0.0); glVertex3f(dim,-dim, -dim);
+   glTexCoord2f(0.0,0.0); glVertex3f(dim,-dim, +dim);
+   glTexCoord2f(0.0,1.0); glVertex3f(dim,+dim, +dim);
+   glTexCoord2f(1.0,1.0); glVertex3f(dim,+dim, -dim);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-left.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(1, 0, 0);
+   glTexCoord2f(1.0,0.0); glVertex3f(-dim,-dim, +dim);
+   glTexCoord2f(0.0,0.0); glVertex3f(-dim,-dim, -dim);
+   glTexCoord2f(0.0,1.0); glVertex3f(-dim,+dim, -dim);
+   glTexCoord2f(1.0,1.0); glVertex3f(-dim,+dim, +dim);
+   glEnd();
+
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-top.bmp"));
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glBegin(GL_QUADS);
+   glNormal3f(0, -1, 0);
+   glTexCoord2f(1.0,0.0); glVertex3f(+dim,dim, +dim);
+   glTexCoord2f(0.0,0.0); glVertex3f(-dim,dim, +dim);
+   glTexCoord2f(0.0,1.0); glVertex3f(-dim,dim, -dim);
+   glTexCoord2f(1.0,1.0); glVertex3f(+dim,dim, -dim);
+   glEnd();
+}
+
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
@@ -927,15 +1161,15 @@ void display()
 
    //  Light switch
    if (light) {
-      //  Translate intensity to color vectors
-      float Ambient[]   = {0.01*ambient ,0.01*ambient ,0.01*ambient ,1.0};
-      float Diffuse[]   = {0.01*diffuse ,0.01*diffuse ,0.01*diffuse ,1.0};
-      float Specular[]  = {0.01*specular,0.01*specular,0.01*specular,1.0};
       //  Light position
-      float Position[]  = {distance*Cos(zh),ylight,distance*Sin(zh),1.0};
+      float Position[]  = {distance*Cos(zh),distance*Sin(zh),0,1.0};
+      // float MoonPosition[]  = {-(distance*Cos(zh)),-(distance*Sin(zh)),0,1.0};
+
       //  Draw light position as ball (still no lighting here)
       glColor3f(1,1,1);
-      ball(Position[0],Position[1],Position[2] , 0.1);
+      ball(Position[0],Position[1],Position[2] , 0.6); //Sun
+      // ball(MoonPosition[0],MoonPosition[1],MoonPosition[2], 0.3); //Moon
+
       //  OpenGL should normalize normal vectors
       glEnable(GL_NORMALIZE);
       //  Enable lighting
@@ -945,9 +1179,10 @@ void display()
       //  glColor sets ambient and diffuse color materials
       glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
       glEnable(GL_COLOR_MATERIAL);
-      //  Enable light 0
+
+      //  Enable light 0 - Sun
       glEnable(GL_LIGHT0);
-      //  Set ambient, diffuse, specular components and position of light 0
+      //  Set ambient, diffuse, specular components and position of light 0 (Sun)
       glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
       glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
       glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
@@ -957,6 +1192,15 @@ void display()
       glDisable(GL_LIGHTING);
    }
 
+   //Inital values for texture repitition
+   double texRepX = 1.0;
+   double texRepY = 1.0;
+
+   //Draw scene
+
+   //Skybox
+   skybox(64);
+
    //  Set specular color to white
    float white[] = {1,1,1,1};
    float black[] = {0,0,0,1};
@@ -964,79 +1208,18 @@ void display()
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
 
-   //Inital values for texture repitition
-   double texRepX = 1.0;
-   double texRepY = 1.0;
-
-   //Draw scene
-
-   glDisable(GL_POLYGON_OFFSET_FILL);
-   //Skybox
-   glColor3f(0.7, 0.7, 0.7);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-front.bmp"));
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glBegin(GL_QUADS);
-   glNormal3f(0, 0, -1);
-   glTexCoord2f(1.0,0.0); glVertex3f(+16,-16, 16);
-   glTexCoord2f(0.0,0.0); glVertex3f(-16,-16, 16);
-   glTexCoord2f(0.0,1.0); glVertex3f(-16,+16, 16);
-   glTexCoord2f(1.0,1.0); glVertex3f(+16,+16, 16);
-   glEnd();
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-back.bmp"));
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glBegin(GL_QUADS);
-   glNormal3f(0, 0, -1);
-   glTexCoord2f(1.0,0.0); glVertex3f(-16,-16, -16);
-   glTexCoord2f(0.0,0.0); glVertex3f(+16,-16, -16);
-   glTexCoord2f(0.0,1.0); glVertex3f(+16,+16, -16);
-   glTexCoord2f(1.0,1.0); glVertex3f(-16,+16, -16);
-   glEnd();
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-right.bmp"));
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glBegin(GL_QUADS);
-   glNormal3f(0, 0, -1);
-   glTexCoord2f(1.0,0.0); glVertex3f(16,-16, -16);
-   glTexCoord2f(0.0,0.0); glVertex3f(16,-16, +16);
-   glTexCoord2f(0.0,1.0); glVertex3f(16,+16, +16);
-   glTexCoord2f(1.0,1.0); glVertex3f(16,+16, -16);
-   glEnd();
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-left.bmp"));
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glBegin(GL_QUADS);
-   glNormal3f(0, 0, -1);
-   glTexCoord2f(1.0,0.0); glVertex3f(-16,-16, +16);
-   glTexCoord2f(0.0,0.0); glVertex3f(-16,-16, -16);
-   glTexCoord2f(0.0,1.0); glVertex3f(-16,+16, -16);
-   glTexCoord2f(1.0,1.0); glVertex3f(-16,+16, +16);
-   glEnd();
-
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("skybox-top.bmp"));
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glBegin(GL_QUADS);
-   glNormal3f(0, 0, -1);
-   glTexCoord2f(1.0,0.0); glVertex3f(+16,16, +16);
-   glTexCoord2f(0.0,0.0); glVertex3f(-16,16, +16);
-   glTexCoord2f(0.0,1.0); glVertex3f(-16,16, -16);
-   glTexCoord2f(1.0,1.0); glVertex3f(+16,16, -16);
-   glEnd();
-
    //Enable offset for windows, doors, and other decals
    glPolygonOffset(1,1);
    glEnable(GL_POLYGON_OFFSET_FILL);
 
-   //Blue car
-   car(-1,0.12,0.8, 1,1,1, 0, 0,0,0.8);
+   //Police Car
+   policeCar(2,0.12,1.2, 1,1,1, 45);
 
-   //Red car
-   car(3,0.12,0.8, 1,1,1, 0, 0.8,0,0);
+   // //Blue car
+   // car(-1,0.12,0.8, 1,1,1, 0, 0,0,0.8);
+
+   // //Red car
+   // car(3,0.12,0.8, 1,1,1, 0, 0.8,0,0);
 
    //Street surface - Main Street
    glColor3f(0.4, 0.4, 0.4);
@@ -1094,6 +1277,18 @@ void display()
 
    //Grey town house - player side
    greyHouse(0,0,0);
+
+   //Grey town house - Far
+   greyHouse(10,-2.05,-90); //Left
+   greyHouse(10,2.05,-90); //Middle
+   greyHouse(10,6.15,-90); //Right
+
+   //Fence
+   glColor3f(0.4, 0.4, 0.4);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("wood-fence.bmp"));
+   texScale = 0.5;
+   cube(13,0.6,0, 0.05,0.5,2, 90); //Left
+   cube(13,0.6,4.1, 0.05,0.5,2, 90); //Left
 
    //Brown workshop - player side
    glColor3f(0.7, 0.7, 0.7);
@@ -1230,7 +1425,45 @@ void idle()
 {
    //  Elapsed time in seconds
    double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-   zh = fmod(90*t,360.0);
+   zh = fmod(15*t,360.0);
+
+   float ambScale = 0.8;
+
+   if(Sin(zh) >= 0.2) {
+      Ambient[0] = (255 / 255) * ambScale;
+      Ambient[1] = (255 / 255) * ambScale;
+      Ambient[2] = (255 / 255) * ambScale;
+
+      Diffuse[0] = 1.0;
+      Diffuse[1] = 1.0;
+      Diffuse[2] = 1.0;
+   } else if (Sin(zh) < 0.4 && Sin(zh) >= 0) {
+      Ambient[0] = (255 / 255) * ambScale;
+      Ambient[1] = ((60 + (195*Sin(zh)*2.5)) / 255) * ambScale;
+      Ambient[2] = ((60 + (195*Sin(zh)*2.5)) / 255) * ambScale;
+
+      Diffuse[0] = Sin(zh)*2.5;
+      Diffuse[1] = Sin(zh)*2.5;
+      Diffuse[2] = Sin(zh)*2.5;
+   } else if (Sin(zh) < 0 && Sin(zh) >= -0.4){
+      Ambient[0] = ((255 - (235*Sin(zh)*-2.5)) / 255) * ambScale;
+      Ambient[1] = (60 / 255) * ambScale;
+      Ambient[2] = ((60 + (120*Sin(zh)*-2.5)) / 255) * ambScale;
+
+      Diffuse[0] = 0;
+      Diffuse[1] = 0;
+      Diffuse[2] = 0;
+   } else {
+      Ambient[0] = (20 / 255) * ambScale;
+      Ambient[1] = (60 / 255) * ambScale;
+      Ambient[2] = (180 / 255) * ambScale;
+
+      Diffuse[0] = 0;
+      Diffuse[1] = 0;
+      Diffuse[2] = 0;
+   }
+
+
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -1320,47 +1553,47 @@ void key(unsigned char ch,int x,int y)
    else if (ch==']')
       ylight += 0.1;
    //First Person Controls
-   else if (ch == 'w' || ch == 'W') {
-      fpX += fpMoveInc * refX;
-      fpZ += fpMoveInc * refZ;
-   }
-   else if (ch == 's' || ch == 'S') {
-      fpX -= fpMoveInc * refX;
-      fpZ -= fpMoveInc * refZ;
-   }
-   else if (ch == 'd' || ch == 'D') {
-      fpX += fpMoveInc * -refZ;
-      fpZ += fpMoveInc * refX;
-   }
-   else if (ch == 'a' || ch == 'A') {
-      fpX += fpMoveInc * refZ;
-      fpZ += fpMoveInc * -refX;
-   }
-   //  Ambient level
-   // else if (ch=='a' && ambient>0)
-   //    ambient -= 5;
-   // else if (ch=='A' && ambient<100)
-   //    ambient += 5;
-   // //  Diffuse level
-   // else if (ch=='d' && diffuse>0)
-   //    diffuse -= 5;
-   // else if (ch=='D' && diffuse<100)
-   //    diffuse += 5;
-   // //  Specular level
-   // else if (ch=='s' && specular>0)
-   //    specular -= 5;
-   // else if (ch=='S' && specular<100)
-   //    specular += 5;
-   // //  Emission level
-   // else if (ch=='e' && emission>0)
-   //    emission -= 5;
-   // else if (ch=='E' && emission<100)
-   //    emission += 5;
-   // //  Shininess level
-   // else if (ch=='n' && shininess>-1)
-   //    shininess -= 1;
-   // else if (ch=='N' && shininess<7)
-   //    shininess += 1;
+   // else if (ch == 'w' || ch == 'W') {
+   //    fpX += fpMoveInc * refX;
+   //    fpZ += fpMoveInc * refZ;
+   // }
+   // else if (ch == 's' || ch == 'S') {
+   //    fpX -= fpMoveInc * refX;
+   //    fpZ -= fpMoveInc * refZ;
+   // }
+   // else if (ch == 'd' || ch == 'D') {
+   //    fpX += fpMoveInc * -refZ;
+   //    fpZ += fpMoveInc * refX;
+   // }
+   // else if (ch == 'a' || ch == 'A') {
+   //    fpX += fpMoveInc * refZ;
+   //    fpZ += fpMoveInc * -refX;
+   // }
+   // Ambient level
+   else if (ch=='a' && ambient>0)
+      ambient -= 5;
+   else if (ch=='A' && ambient<100)
+      ambient += 5;
+   //  Diffuse level
+   else if (ch=='d' && diffuse>0)
+      diffuse -= 5;
+   else if (ch=='D' && diffuse<100)
+      diffuse += 5;
+   //  Specular level
+   else if (ch=='s' && specular>0)
+      specular -= 5;
+   else if (ch=='S' && specular<100)
+      specular += 5;
+   //  Emission level
+   else if (ch=='e' && emission>0)
+      emission -= 5;
+   else if (ch=='E' && emission<100)
+      emission += 5;
+   //  Shininess level
+   else if (ch=='n' && shininess>-1)
+      shininess -= 1;
+   else if (ch=='N' && shininess<7)
+      shininess += 1;
    //  Translate shininess power to value (-1 => 0)
    shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
