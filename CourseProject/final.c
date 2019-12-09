@@ -49,6 +49,10 @@ float shiny   =   1;  // Shininess (value)
 int zh        =  90;  // Light azimuth
 float ylight  = 13;  // Elevation of light
 
+int at0=100;      //  Constant  attenuation %
+int at1=20;        //  Linear    attenuation %
+int at2=20;        //  Quadratic attenuation %
+
 double fpMoveInc = 0.02; //Multiplier for how much to move each keystroke in FP mode
 
 //First person camera location
@@ -681,7 +685,7 @@ static void policeCar(double x,double y,double z,
    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.8,0.25,-0.35);
    glEnd();
 
-   int t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+   float t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
 
    //Light bar
 
@@ -693,15 +697,20 @@ static void policeCar(double x,double y,double z,
    //  Enable light 1 - Police Light
    glEnable(GL_LIGHT1);
    
-   if (t % 2 == 0) {
+   if ((int)(t/0.5) % 2 == 0) {
+      float amb[4] = {0,0,0,0};
       float dif[4] = {0.8,0,0,1};
       float spec[4] = {0,0,0,1};
       float pos[4] = {-0.2,0.26,-0.15,1.0};
       //Red Light
-      glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
-      glLightfv(GL_LIGHT0,GL_DIFFUSE ,dif);
-      glLightfv(GL_LIGHT0,GL_SPECULAR,spec);
-      glLightfv(GL_LIGHT0,GL_POSITION,pos);
+      glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT1,GL_POSITION,pos);
+
+      glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
 
       //Red Light
       float redEm[4] = {0.8, 0, 0, 1.0};
@@ -717,14 +726,19 @@ static void policeCar(double x,double y,double z,
       glColor3f(0, 0, 0.5);
       cube(-0.2,0.42,0.15, 0.07,0.02,0.1, 0);
    } else {
+      float amb[4] = {0,0,0,0};
       float dif[4] = {0,0,0.8,1};
       float spec[4] = {0,0,0,1};
       float pos[4] = {-0.2,0.26,0.15,1.0};
       //Blue Light
-      glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
-      glLightfv(GL_LIGHT0,GL_DIFFUSE ,dif);
-      glLightfv(GL_LIGHT0,GL_SPECULAR,spec);
-      glLightfv(GL_LIGHT0,GL_POSITION,pos);
+      glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT1,GL_POSITION,pos);
+
+      glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
 
       //Red Light
       glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
@@ -1021,6 +1035,12 @@ static void greyHouse(double x, double z, double th) {
    glPolygonOffset(1,1);
    glEnable(GL_POLYGON_OFFSET_FILL);
 
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
    //Walkway (to house)
    glColor3f(0.7, 0.7, 0.7);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("walkway.bmp"));
@@ -1031,8 +1051,8 @@ static void greyHouse(double x, double z, double th) {
    glColor3f(0, 0.3, 0.1);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("hedge.bmp"));
    texScale = 0.25;
-   cube(1.23,0.3,-1.2, 0.17,0.2,0.77, 90);
-   cube(-1.23,0.3,-1.2, 0.17,0.2,0.77, 90);
+   cube(1.23,0.3,-1.2, 0.77,0.2,0.17, 0);
+   cube(-1.23,0.3,-1.2, 0.77,0.2,0.17, 0);
 
    //Grass
    glColor3f(0.7, 0.7, 0.7);
@@ -1169,6 +1189,92 @@ static void skybox(float dim) {
    glEnd();
 }
 
+static void lampPost(double x,double y,double z,
+                     double dx,double dy,double dz,
+                     double th)
+{
+   //  Save transformation
+   glPushMatrix();
+   //  Offset
+   glTranslated(x,y,z);
+   glRotated(th,0,1,0);
+
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+   float radScale = 0.03;
+   float baseRadScale = 0.05;
+   float capRadScale = 0.01;
+   float outerRadScale = 0.08;
+
+   //Pole
+   glColor3f(0.4, 0.4, 0.4);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("basic-metal.bmp"));   
+   glBegin(GL_QUADS);
+   for(int i = 45; i <= 360; i += 45) {
+      //Base
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(baseRadScale*Cos(i), 0, baseRadScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(baseRadScale*Cos(i-45), 0, baseRadScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(radScale*Cos(i-45), 0.1, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(radScale*Cos(i), 0.1, radScale*Sin(i));
+      //Pole Lower
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i), 0.1, radScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i-45), 0.1, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 2); glVertex3f(radScale*Cos(i-45), 0.5, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 2); glVertex3f(radScale*Cos(i), 0.5, radScale*Sin(i));
+      //Pole Upper
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i), 0.5, radScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i-45), 0.5, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 2); glVertex3f(radScale*Cos(i-45), 1, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 2); glVertex3f(radScale*Cos(i), 1, radScale*Sin(i));
+      //Light Cap
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i), 1.15, radScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i-45), 1.15, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(capRadScale*Cos(i-45), 1.17, capRadScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(capRadScale*Cos(i), 1.17, capRadScale*Sin(i));
+   }
+   glEnd();
+
+   //Light
+   float em[4] = {0.8, 0.8, 0.1, 1.0};
+   glMaterialf(GL_FRONT,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT,GL_SPECULAR,em);
+   glMaterialfv(GL_FRONT,GL_EMISSION,em);
+   glColor3f(0.8, 0.8, 0.1);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("glass.bmp"));   
+   glBegin(GL_QUADS);
+   for(int i = 45; i <= 360; i += 45) {
+      //Lower
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i), 1, radScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(radScale*Cos(i-45), 1, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(outerRadScale*Cos(i-45), 1.1, outerRadScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(outerRadScale*Cos(i), 1.1, outerRadScale*Sin(i));
+      //Upper
+      glNormal3f(Cos(i-22.5),0,Sin(i-22.5));
+      glTexCoord2f(Cos(i), 0); glVertex3f(outerRadScale*Cos(i), 1.1, outerRadScale*Sin(i));
+      glTexCoord2f(Cos(i), 0); glVertex3f(outerRadScale*Cos(i-45), 1.1, outerRadScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(radScale*Cos(i-45), 1.15, radScale*Sin(i-45));
+      glTexCoord2f(Cos(i), 1); glVertex3f(radScale*Cos(i), 1.15, radScale*Sin(i));
+   }
+   glEnd();
+
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+   //Undo transformations
+   glPopMatrix();
+}
+
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
@@ -1207,38 +1313,33 @@ void display()
    //  Flat or smooth shading
    glShadeModel(smooth ? GL_SMOOTH : GL_FLAT);
 
-   //  Light switch
-   if (light) {
-      //  Light position
-      float Position[]  = {distance*Cos(zh),distance*Sin(zh),0,1.0};
-      // float MoonPosition[]  = {-(distance*Cos(zh)),-(distance*Sin(zh)),0,1.0};
+   //  Light position
+   float Position[]  = {distance*Cos(zh),distance*Sin(zh),0,1.0};
+   // float MoonPosition[]  = {-(distance*Cos(zh)),-(distance*Sin(zh)),0,1.0};
 
-      //  Draw light position as ball (still no lighting here)
-      glColor3f(1,1,1);
-      ball(Position[0],Position[1],Position[2] , 0.6); //Sun
-      // ball(MoonPosition[0],MoonPosition[1],MoonPosition[2], 0.3); //Moon
+   //  Draw light position as ball (still no lighting here)
+   glColor3f(1,1,1);
+   ball(Position[0],Position[1],Position[2] , 0.6); //Sun
+   // ball(MoonPosition[0],MoonPosition[1],MoonPosition[2], 0.3); //Moon
 
-      //  OpenGL should normalize normal vectors
-      glEnable(GL_NORMALIZE);
-      //  Enable lighting
-      glEnable(GL_LIGHTING);
-      //  Location of viewer for specular calculations
-      glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,local);
-      //  glColor sets ambient and diffuse color materials
-      glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
-      glEnable(GL_COLOR_MATERIAL);
+   //  OpenGL should normalize normal vectors
+   glEnable(GL_NORMALIZE);
+   //  Enable lighting
+   glEnable(GL_LIGHTING);
+   //  Location of viewer for specular calculations
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,local);
+   //  glColor sets ambient and diffuse color materials
+   glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
 
-      //  Enable light 0 - Sun
-      glEnable(GL_LIGHT0);
-      //  Set ambient, diffuse, specular components and position of light 0 (Sun)
-      glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
-      glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
-      glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
-      glLightfv(GL_LIGHT0,GL_POSITION,Position);
-   }
-   else {
-      glDisable(GL_LIGHTING);
-   }
+   //  Enable light 0 - Sun
+   glEnable(GL_LIGHT0);
+   //  Set ambient, diffuse, specular components and position of light 0 (Sun)
+   glLightfv(GL_LIGHT0,GL_AMBIENT ,Ambient);
+   glLightfv(GL_LIGHT0,GL_DIFFUSE ,Diffuse);
+   glLightfv(GL_LIGHT0,GL_SPECULAR,Specular);
+   glLightfv(GL_LIGHT0,GL_POSITION,Position);
+   
 
    //Inital values for texture repitition
    double texRepX = 1.0;
@@ -1260,14 +1361,75 @@ void display()
    glPolygonOffset(1,1);
    glEnable(GL_POLYGON_OFFSET_FILL);
 
+   //Lights for street lamps
+   float amb[4] = {0,0,0,0};
+   float dif[4] = {0.8,0.8,0.1,1};
+   float spec[4] = {0.0,0.0,0.0,1};
+
+   float posThree[4] = {3,1.1,-0.1,1.0};
+   float posFour[4] = {-3,1.1,-0.1,1.0};
+   float posFive[4] = {3,1.1,3.1,1.0};
+   float posSix[4] = {-3,1.1,3.1,1.0};
+
+   if(Sin(zh) <= 0) {
+      glEnable(GL_LIGHT3);
+      glLightfv(GL_LIGHT3,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT3,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT3,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT3,GL_POSITION,posThree);
+
+      glLightf(GL_LIGHT3,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT3,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT3,GL_QUADRATIC_ATTENUATION,at2/100.0);
+
+      glEnable(GL_LIGHT4);
+      glLightfv(GL_LIGHT4,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT4,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT4,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT4,GL_POSITION,posFour);
+
+      glLightf(GL_LIGHT4,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT4,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT4,GL_QUADRATIC_ATTENUATION,at2/100.0);
+
+      glEnable(GL_LIGHT5);
+      glLightfv(GL_LIGHT5,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT5,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT5,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT5,GL_POSITION,posFive);
+
+      glLightf(GL_LIGHT5,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT5,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT5,GL_QUADRATIC_ATTENUATION,at2/100.0);
+
+      glEnable(GL_LIGHT6);
+      glLightfv(GL_LIGHT6,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT6,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT6,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT6,GL_POSITION,posSix);
+
+      glLightf(GL_LIGHT6,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT6,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT6,GL_QUADRATIC_ATTENUATION,at2/100.0);
+   } else {
+      glDisable(GL_LIGHT3);
+      glDisable(GL_LIGHT4);
+      glDisable(GL_LIGHT5);
+      glDisable(GL_LIGHT6);
+   }
+
+
    //Police Car
    policeCar(3,0.12,1.2, 1,1,1, 30);
 
-   // //Blue car
-   // car(-1,0.12,0.8, 1,1,1, 0, 0,0,0.8);
+   //Lamp Posts
+   lampPost(3,0.1,-0.1, 1,1,1, 0);
+   lampPost(3,0.1,3.1, 1,1,1, 0);
+   lampPost(-3,0.1,-0.1, 1,1,1, 0);
+   lampPost(-3,0.1,3.1, 1,1,1, 0);
 
-   // //Red car
-   // car(3,0.12,0.8, 1,1,1, 0, 0.8,0,0);
+   //Blue car
+   car(-1,0.12,1.8, 1,1,1, 0, 0,0,0.8);
 
    //Street surface - Main Street
    glColor3f(0.4, 0.4, 0.4);
@@ -1414,14 +1576,11 @@ void display()
    cube(2.8,0.6,-1.05, 0.05,0.5,0.7, 90); //Front Left
    cube(5.2,0.6,-1.05, 0.05,0.5,0.7, 90); //Front Right
 
-   //Conder block wall - Far Side
+   //Cinder block wall - Far Side
    glColor3f(0.4, 0.4, 0.4);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("cinder-block.bmp"));
    texScale = 0.5;
    cube(-4,0.6,4.05, 2,0.5,0.05, 0); //Left
-
-   
-
 
    //  Draw axes - no lighting from here on
    glDisable(GL_LIGHTING);
@@ -1512,7 +1671,7 @@ void idle()
 {
    //  Elapsed time in seconds
    double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-   zh = fmod(15*t,360.0);
+   zh = fmod(10*t,360.0);
 
    setEnvLighting();
 
