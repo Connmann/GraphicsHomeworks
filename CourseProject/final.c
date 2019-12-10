@@ -2,6 +2,15 @@
  *  Final Course Project
  *  Connor Guerin
  *
+ *  m             Toggles light (sun) movement
+ *  p             Toggles first person/perspective projection
+ *  +/-           Change field of view of perspective
+ *  x             Toggle axes display
+ *  arrow keys    Change view angle
+ *  PgDn/PgUp     Zoom in and out (in perspective view)
+ *  0             Reset view angle
+ *  ESC           Exit
+ *
  */
 #include "CSCIx229.h"
 
@@ -65,12 +74,6 @@ static void cube(double x,double y,double z,
                  double dx,double dy,double dz,
                  double th)
 {
-   //  Set specular color to white
-   // float white[] = {1,1,1,1};
-   // float black[] = {0,0,0,1};
-   // glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
-   // glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
-   // glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    //  Save transformation
    glPushMatrix();
    //  Offset, scale and rotate

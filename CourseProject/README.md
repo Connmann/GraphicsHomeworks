@@ -1,29 +1,14 @@
 #Final Project
-##Connor Guerin
 
-##What Remains
- * In the final version of this project the camera will be locked in first person and player movement will be restricted to the sidewalk.
- * Add a police car on the street with flashing red/blue lights
- * Add day/night cycle (changing ambient light)
- * Add basic buildings and fencing to the far edges of the word, to make it seem more "immersive"
- * Chase down an inconsistent seg fault, likely related to the first person camera movement.
+##Connor Guerin
+The project is meant to run in first person (the camera pans but there is no player movement). Press p to switch to perspective 'flying' camera for closer inspection/grading purposes. The day night cycle takes 36 seconds (10 degrees/sec) to do a complete cycle.
 
 ##Key Bindings
-l          Toggles lighting
-w/a/s/d    Move the camera (in first person mode)
-e/E        Decrease/increase emitted light
-n/N        Decrease/increase shininess
-F1         Toggle smooth/flat shading
-F2         Toggle local viewer mode
-F3         Toggle light distance (1/5)
-F8         Change ball increment
-F9         Invert bottom normal
-m          Toggles light movement
-[]         Lower/rise light
+m          Toggles light (sun) movement
 p          Toggles first person/perspective projection
 +/-        Change field of view of perspective
-x          Toggle axes
-arrows     Change view angle
+x          Toggle axes display
+arrow keys Change view angle
 PgDn/PgUp  Zoom in and out (in perspective view)
 0          Reset view angle
 ESC        Exit
