@@ -971,8 +971,6 @@ static void workshop(double x, double z, double th)
    glRotated(th,0,1,0);
 
    //Building - Brown Workshop
-   // glColor3f(0.7, 0.7, 0.7);
-   // glBindTexture(GL_TEXTURE_2D,LoadTexBMP("brown-brick.bmp"));
    texScale = 0.5;
    cube(0,1.6,0, 2,0.4,1, 0); //Top
    cube(-1.75,0.65,0, 0.25,0.55,1, 0); //Left
@@ -1067,15 +1065,15 @@ static void greyHouse(double x, double z, double th) {
 
    //Door
    glColor3f(0.5, 0.5, 0.5);
-   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("front-door-1.bmp"));
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("front-door-2.bmp"));
    glBegin(GL_QUADS);
    double texRepX = 1.0;
    double texRepY = 1.0;
    glNormal3f(0, 0, 1);
-   glTexCoord2f(0.0,0.0); glVertex3f(-0.3, 0.2, -2);
-   glTexCoord2f(texRepX,0.0); glVertex3f(0.3, 0.2, -2);
-   glTexCoord2f(texRepX,texRepY); glVertex3f(0.3, 1.2, -2);
-   glTexCoord2f(0.0,texRepY); glVertex3f(-0.3, 1.2, -2);
+   glTexCoord2f(0.0,0.0); glVertex3f(-0.31, 0.1, -2);
+   glTexCoord2f(texRepX,0.0); glVertex3f(0.31, 0.1, -2);
+   glTexCoord2f(texRepX,texRepY); glVertex3f(0.31, 1.21, -2);
+   glTexCoord2f(0.0,texRepY); glVertex3f(-0.31, 1.21, -2);
    glEnd();
 
    //Windows
