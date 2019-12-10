@@ -2,41 +2,22 @@
  *  Final Course Project
  *  Connor Guerin
  *
- *  Key bindings:
- *  l          Toggles lighting
- *  w/a/s/d    Move the camera (in first person mode)
- *  e/E        Decrease/increase emitted light
- *  n/N        Decrease/increase shininess
- *  F1         Toggle smooth/flat shading
- *  F2         Toggle local viewer mode
- *  F3         Toggle light distance (1/5)
- *  F8         Change ball increment
- *  F9         Invert bottom normal
- *  m          Toggles light movement
- *  []         Lower/rise light
- *  p          Toggles first person/perspective projection
- *  +/-        Change field of view of perspective
- *  x          Toggle axes
- *  arrows     Change view angle
- *  PgDn/PgUp  Zoom in and out (in perspective view)
- *  0          Reset view angle
- *  ESC        Exit
  */
 #include "CSCIx229.h"
 
-int axes=1;       //  Display axes
+int axes=0;       //  Display axes
 int mode=0;       //  Projection mode
 int move=1;       //  Move light
-int th=0;         //  Azimuth of view angle
+int th=110;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 int light=1;      //  Lighting
-double asp=1.333;     //  Aspect ratio
+double asp=1.333;  //  Aspect ratio
 double dim=8.0;   //  Size of world
 
 // Light values
 int one       =   1;  // Unit value
-int distance  =   30;  // Light distance
+int distance  =   25;  // Light distance
 int inc       =  10;  // Ball increment
 int smooth    =   1;  // Smooth/Flat shading
 int local     =   0;  // Local Viewer Model
@@ -58,7 +39,7 @@ double fpMoveInc = 0.02; //Multiplier for how much to move each keystroke in FP 
 //First person camera location
 double fpX = 0;
 double fpY = 0.7;
-double fpZ = 0;
+double fpZ = -0.3;
 
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 5;
@@ -180,14 +161,14 @@ static void ball(double x,double y,double z,double r)
 {
    int th,ph;
    float yellow[] = {1.0,1.0,0.0,1.0};
-   float Emission[]  = {0.0,0.0,0.01*emission,1.0};
+   float Emission[]  = {1.0,1.0,1.0,1.0};
    //  Save transformation
    glPushMatrix();
    //  Offset, scale and rotate
    glTranslated(x,y,z);
    glScaled(r,r,r);
    //  White ball
-   glColor3f(1,1,1);
+   glColor3f(1,1,0.9);
    glMaterialf(GL_FRONT,GL_SHININESS,shiny);
    glMaterialfv(GL_FRONT,GL_SPECULAR,yellow);
    glMaterialfv(GL_FRONT,GL_EMISSION,Emission);
@@ -1129,7 +1110,7 @@ static void skybox(float dim) {
    float white[] = {1,1,1,1};
    float black[] = {0,0,0,1};
    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,0);
-   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,black);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
 
    glColor3f(0.7, 0.7, 0.7);
@@ -1319,7 +1300,7 @@ void display()
 
    //  Draw light position as ball (still no lighting here)
    glColor3f(1,1,1);
-   ball(Position[0],Position[1],Position[2] , 0.6); //Sun
+   ball(Position[0],Position[1],Position[2] , 1); //Sun
    // ball(MoonPosition[0],MoonPosition[1],MoonPosition[2], 0.3); //Moon
 
    //  OpenGL should normalize normal vectors
@@ -1418,9 +1399,8 @@ void display()
       glDisable(GL_LIGHT6);
    }
 
-
    //Police Car
-   policeCar(3,0.12,1.2, 1,1,1, 30);
+   policeCar(3,0.13,1.2, 1,1,1, 30);
 
    //Lamp Posts
    lampPost(3,0.1,-0.1, 1,1,1, 0);
@@ -1429,7 +1409,10 @@ void display()
    lampPost(-3,0.1,3.1, 1,1,1, 0);
 
    //Blue car
-   car(-1,0.12,1.8, 1,1,1, 0, 0,0,0.8);
+   car(-1,0.13,1.8, 1,1,1, 0, 0,0,0.8);
+
+   //Red Car
+   car(-9,0.13,1.8, 1,1,1, 90, 0.8,0,0);
 
    //Street surface - Main Street
    glColor3f(0.4, 0.4, 0.4);
@@ -1483,7 +1466,6 @@ void display()
 
    cube(-10.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
    cube(10.5,-0.05,-2, 2,0.15,0.5, 90); // Player side
-
 
    //Grey town house - player side
    greyHouse(0,0,0);
@@ -1558,14 +1540,32 @@ void display()
 
       xVal -= 2;
    }
-   
-
 
    //Grass Square
    glColor3f(0.7, 0.7, 0.7);
    glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grass.bmp"));
    texScale = 0.5;
    cube(4,-0.05,-3, 2,0.15,2, 0);
+
+   //Grass Lawn - Far right
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("grass.bmp"));
+   texScale = 0.5;
+   int zPos = -3;
+   for(int i = 0; i < 7; i++) {
+      cube(-12,-0.05,zPos, 1,0.15,1, 0);
+      zPos += 2;
+   }
+
+   //Far Fence
+   glColor3f(0.4, 0.4, 0.4);
+   glBindTexture(GL_TEXTURE_2D,LoadTexBMP("wood-fence.bmp"));
+   texScale = 0.5;
+   zPos = -3;
+   for(int i = 0; i < 7; i++) {
+      cube(-13,0.6,zPos, 0.05,0.5,1, 0);
+      zPos += 2;
+   }
 
    //Fence
    glColor3f(0.4, 0.4, 0.4);
@@ -1609,15 +1609,7 @@ void display()
 
    //  Display parameters
    glWindowPos2i(5,5);
-   Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s Light=%s",
-     th,ph,dim,fov,mode?"Perpective":"FP",light?"On":"Off");
-   if (light)
-   {
-      glWindowPos2i(5,45);
-      Print("Model=%s LocalViewer=%s Distance=%d Elevation=%.1f",smooth?"Smooth":"Flat",local?"On":"Off",distance,ylight);
-      glWindowPos2i(5,25);
-      Print("Ambient=%d  Diffuse=%d Specular=%d Emission=%d Shininess=%.0f",ambient,diffuse,specular,emission,shiny);
-   }
+   Print("Angle=%d,%d  Dim=%.1f  FOV=%d  Projection=%s",th,ph,dim,fov,mode?"Perpective":"FP");
 
    //  Render the scene and make it visible
    ErrCheck("display");
@@ -1702,21 +1694,6 @@ void special(int key,int x,int y)
    //  PageDown key - decrease dim
    else if (key == GLUT_KEY_PAGE_UP && dim>1)
       dim -= 0.1;
-   //  Smooth color model
-   else if (key == GLUT_KEY_F1)
-      smooth = 1-smooth;
-   //  Local Viewer
-   else if (key == GLUT_KEY_F2)
-      local = 1-local;
-   else if (key == GLUT_KEY_F3)
-      distance = (distance==1) ? 5 : 1;
-   //  Toggle ball increment
-   else if (key == GLUT_KEY_F8)
-      inc = (inc==10)?3:10;
-   //  Flip sign
-   else if (key == GLUT_KEY_F9)
-      one = -one;
-   //  Keep angles to +/-360 degrees
    th %= 360;
    ph %= 360;
    //  Update projection
@@ -1739,74 +1716,17 @@ void key(unsigned char ch,int x,int y)
    //  Toggle axes
    else if (ch == 'x' || ch == 'X')
       axes = 1-axes;
-   //  Toggle lighting
-   else if (ch == 'l' || ch == 'L')
-      light = 1-light;
    //  Switch projection mode
    else if (ch == 'p' || ch == 'P')
       mode = 1-mode;
    //  Toggle light movement
    else if (ch == 'm' || ch == 'M')
       move = 1-move;
-   //  Move light
-   else if (ch == '<')
-      zh += 1;
-   else if (ch == '>')
-      zh -= 1;
    //  Change field of view angle
    else if (ch == '-' && ch>1)
       fov--;
    else if (ch == '+' && ch<179)
       fov++;
-   //  Light elevation
-   else if (ch=='[')
-      ylight -= 0.1;
-   else if (ch==']')
-      ylight += 0.1;
-   //First Person Controls
-   // else if (ch == 'w' || ch == 'W') {
-   //    fpX += fpMoveInc * refX;
-   //    fpZ += fpMoveInc * refZ;
-   // }
-   // else if (ch == 's' || ch == 'S') {
-   //    fpX -= fpMoveInc * refX;
-   //    fpZ -= fpMoveInc * refZ;
-   // }
-   // else if (ch == 'd' || ch == 'D') {
-   //    fpX += fpMoveInc * -refZ;
-   //    fpZ += fpMoveInc * refX;
-   // }
-   // else if (ch == 'a' || ch == 'A') {
-   //    fpX += fpMoveInc * refZ;
-   //    fpZ += fpMoveInc * -refX;
-   // }
-   // Ambient level
-   else if (ch=='a' && ambient>0)
-      ambient -= 5;
-   else if (ch=='A' && ambient<100)
-      ambient += 5;
-   //  Diffuse level
-   else if (ch=='d' && diffuse>0)
-      diffuse -= 5;
-   else if (ch=='D' && diffuse<100)
-      diffuse += 5;
-   //  Specular level
-   else if (ch=='s' && specular>0)
-      specular -= 5;
-   else if (ch=='S' && specular<100)
-      specular += 5;
-   //  Emission level
-   else if (ch=='e' && emission>0)
-      emission -= 5;
-   else if (ch=='E' && emission<100)
-      emission += 5;
-   //  Shininess level
-   else if (ch=='n' && shininess>-1)
-      shininess -= 1;
-   else if (ch=='N' && shininess<7)
-      shininess += 1;
-   //  Translate shininess power to value (-1 => 0)
-   shiny = shininess<0 ? 0 : pow(2.0,shininess);
    //  Reproject
    Project(fov,asp,dim);
    //  Animate if requested
@@ -1838,7 +1758,7 @@ int main(int argc,char* argv[])
    //  Request double buffered, true color window with Z buffering at 600x600
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    glutInitWindowSize(800,600);
-   glutCreateWindow("Connor Guerin - Course Project");
+   glutCreateWindow("Connor Guerin - Final Project");
    //  Set callbacks
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
